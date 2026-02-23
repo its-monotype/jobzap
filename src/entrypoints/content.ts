@@ -11,20 +11,12 @@ const INTEROP_IFRAME_SELECTOR = 'iframe[data-testid="interop-iframe"]';
 
 const log = (...args: unknown[]) => console.log('[LJF]', ...args);
 
-function getInteropDocument(): Document | null {
-  const iframe = document.querySelector<HTMLIFrameElement>(
-    INTEROP_IFRAME_SELECTOR,
-  );
-  return iframe?.contentDocument ?? null;
-}
-
 function getCardAnchors(): HTMLElement[] {
   const docs: Document[] = [document];
-  const iframeDoc = getInteropDocument();
-  if (iframeDoc) {
-    injectStyle(iframeDoc);
-    docs.push(iframeDoc);
-  }
+  const iframeDoc = document.querySelector<HTMLIFrameElement>(
+    INTEROP_IFRAME_SELECTOR,
+  )?.contentDocument;
+  if (iframeDoc) docs.push(iframeDoc);
   return docs.flatMap((doc) =>
     Array.from(
       doc.querySelectorAll<HTMLElement>(
@@ -34,19 +26,14 @@ function getCardAnchors(): HTMLElement[] {
   );
 }
 
-function isDismissed(anchor: HTMLElement): boolean {
-  return (
-    !!anchor.querySelector('.job-card-list--is-dismissed') || // Classic Search
-    !!anchor.querySelector('[data-view-name="undo-dismiss-job"]') // AI Search
-  );
-}
-
 function shouldHide(anchor: HTMLElement) {
   const text = (anchor.textContent || '').toLowerCase();
 
   const hideViewed = text.includes('viewed');
   const hideApplied = text.includes('applied');
-  const hideDismissed = isDismissed(anchor);
+  const hideDismissed =
+    !!anchor.querySelector('.job-card-list--is-dismissed') || // Classic
+    !!anchor.querySelector('[data-view-name="undo-dismiss-job"]'); // AI
 
   return {
     hide: hideViewed || hideApplied || hideDismissed,
@@ -90,7 +77,7 @@ function normalizeAiHr() {
   }
 }
 
-function injectStyle(doc: Document = document) {
+function injectHideStyle(doc: Document = document) {
   if (doc.getElementById(STYLE_ID)) return;
   const s = doc.createElement('style');
   s.id = STYLE_ID;
@@ -170,7 +157,7 @@ export default defineContentScript({
   matches: ['https://www.linkedin.com/jobs/*'],
   runAt: 'document_idle',
   main(ctx) {
-    injectStyle();
+    injectHideStyle();
     apply();
 
     let timeoutId: number | undefined;
@@ -187,6 +174,8 @@ export default defineContentScript({
         INTEROP_IFRAME_SELECTOR,
       );
       if (!iframe?.contentDocument?.body) return;
+
+      injectHideStyle(iframe.contentDocument);
 
       iframeObserver = new MutationObserver(debouncedApply);
       iframeObserver.observe(iframe.contentDocument.body, {

@@ -6,6 +6,12 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
   srcDir: 'src',
   modules: ['@wxt-dev/module-react'],
+  manifest: {
+    name: 'JobZap',
+    description: 'LinkedIn job filter',
+    permissions: ['storage', 'activeTab'],
+    host_permissions: ['https://www.linkedin.com/*'],
+  },
   vite: () => ({
     plugins: [tailwindcss()],
     resolve: {
@@ -14,8 +20,4 @@ export default defineConfig({
       },
     },
   }),
-  manifest: {
-    permissions: ['storage', 'activeTab'],
-    host_permissions: ['https://www.linkedin.com/*'],
-  },
 });

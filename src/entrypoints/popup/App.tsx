@@ -98,7 +98,7 @@ export default function App() {
         <button onClick={() => applyToActiveTab()}>Re-apply</button>
       </div> */}
 
-      <p className="text-sm text-muted-foreground mt-2">
+      <p className="mt-2 text-sm text-muted-foreground">
         Open LinkedIn Jobs and keep scrolling; filters re-apply automatically.
       </p>
     </div>

@@ -6,25 +6,30 @@ import {
   type StateStorage,
 } from 'zustand/middleware';
 import { useShallow } from 'zustand/shallow';
+import { FilterId } from './constants';
 
-export interface FilterSettings {
-  hideViewed: boolean;
-  hideApplied: boolean;
-  hideDismissed: boolean;
-  hiddenCompanies: string[];
-}
-
-export interface FilterCounts {
-  viewed: number;
-  applied: number;
-  dismissed: number;
+interface Settings {
+  filters: Partial<Record<FilterId, boolean>>;
+  blockedCompanies: string[];
+  excludedKeywords: string[];
+  postedWithin: number | null;
+  defaultToMostRecent: boolean;
 }
 
 interface AppStore {
-  settings: FilterSettings;
-  counts: FilterCounts;
-  updateSettings: (partial: Partial<FilterSettings>) => void;
-  setCounts: (counts: FilterCounts) => void;
+  settings: Settings;
+  activeFilters: Record<FilterId, boolean>;
+  counts: Partial<Record<FilterId, number>>;
+  actions: {
+    toggleFilter: (id: FilterId) => void;
+    toggleActive: (id: FilterId) => void;
+    blockCompany: (company: string) => void;
+    unblockCompany: (company: string) => void;
+    addKeyword: (keyword: string) => void;
+    removeKeyword: (keyword: string) => void;
+    updateSettings: (partial: Partial<Settings>) => void;
+    setCounts: (counts: Partial<Record<FilterId, number>>) => void;
+  };
 }
 
 const wxtStorage: StateStorage = {
@@ -43,15 +48,73 @@ export const useAppStore = create<AppStore>()(
   persist(
     (set) => ({
       settings: {
-        hideViewed: true,
-        hideApplied: true,
-        hideDismissed: true,
-        hiddenCompanies: [],
+        filters: {},
+        blockedCompanies: [],
+        excludedKeywords: [],
+        postedWithin: null,
+        defaultToMostRecent: false,
       },
-      counts: { viewed: 0, applied: 0, dismissed: 0 },
-      updateSettings: (partial) =>
-        set((s) => ({ settings: { ...s.settings, ...partial } })),
-      setCounts: (counts) => set({ counts }),
+      activeFilters: {
+        promoted: true,
+        viewed: true,
+        dismissed: true,
+        applied: true,
+        companies: true,
+        keywords: true,
+      },
+      counts: {},
+      actions: {
+        toggleFilter: (id) =>
+          set((s) => ({
+            settings: {
+              ...s.settings,
+              filters: { ...s.settings.filters, [id]: !s.settings.filters[id] },
+            },
+          })),
+        toggleActive: (id) =>
+          set((s) => ({
+            activeFilters: {
+              ...s.activeFilters,
+              [id]: !s.activeFilters[id],
+            },
+          })),
+        blockCompany: (company) =>
+          set((s) => ({
+            settings: {
+              ...s.settings,
+              blockedCompanies: [...s.settings.blockedCompanies, company],
+            },
+          })),
+        unblockCompany: (company) =>
+          set((s) => ({
+            settings: {
+              ...s.settings,
+              blockedCompanies: s.settings.blockedCompanies.filter(
+                (c) => c !== company,
+              ),
+            },
+          })),
+        addKeyword: (keyword) =>
+          set((s) => ({
+            settings: {
+              ...s.settings,
+              excludedKeywords: [...s.settings.excludedKeywords, keyword],
+            },
+          })),
+        removeKeyword: (keyword) =>
+          set((s) => ({
+            settings: {
+              ...s.settings,
+              excludedKeywords: s.settings.excludedKeywords.filter(
+                (k) => k !== keyword,
+              ),
+            },
+          })),
+        updateSettings: (partial) =>
+          set((s) => ({ settings: { ...s.settings, ...partial } })),
+        setCounts: (counts) =>
+          set((s) => ({ counts: { ...s.counts, ...counts } })),
+      },
     }),
     {
       name: 'jobzap',
@@ -62,6 +125,7 @@ export const useAppStore = create<AppStore>()(
 );
 
 export const useSettings = () => useAppStore(useShallow((s) => s.settings));
+export const useActiveFilters = () =>
+  useAppStore(useShallow((s) => s.activeFilters));
 export const useCounts = () => useAppStore(useShallow((s) => s.counts));
-export const useUpdateSettings = () => useAppStore((s) => s.updateSettings);
-export const useSetCounts = () => useAppStore((s) => s.setCounts);
+export const useActions = () => useAppStore((s) => s.actions);

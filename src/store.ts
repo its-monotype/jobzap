@@ -9,7 +9,7 @@ import { useShallow } from 'zustand/shallow';
 import { FilterId } from './constants';
 
 interface Settings {
-  filters: Partial<Record<FilterId, boolean>>;
+  enabledFilters: Record<FilterId, boolean>;
   blockedCompanies: string[];
   excludedKeywords: string[];
   postedWithin: number | null;
@@ -19,16 +19,18 @@ interface Settings {
 interface AppStore {
   settings: Settings;
   activeFilters: Record<FilterId, boolean>;
-  counts: Partial<Record<FilterId, number>>;
+  filterCounts: Partial<Record<FilterId, number>>;
   actions: {
-    toggleFilter: (id: FilterId) => void;
-    toggleActive: (id: FilterId) => void;
-    blockCompany: (company: string) => void;
-    unblockCompany: (company: string) => void;
-    addKeyword: (keyword: string) => void;
-    removeKeyword: (keyword: string) => void;
-    updateSettings: (partial: Partial<Settings>) => void;
-    setCounts: (counts: Partial<Record<FilterId, number>>) => void;
+    setFilterEnabled: (id: FilterId, enabled: boolean) => void;
+    toggleFilterActive: (id: FilterId) => void;
+
+    setBlockedCompanies: (companies: string[]) => void;
+    setExcludedKeywords: (keywords: string[]) => void;
+
+    setPostedWithin: (value: number | null) => void;
+    setDefaultToMostRecent: (value: boolean) => void;
+
+    setFilterCounts: (counts: Partial<Record<FilterId, number>>) => void;
   };
 }
 
@@ -44,76 +46,66 @@ const wxtStorage: StateStorage = {
   },
 };
 
+const defaultSettings: Settings = {
+  enabledFilters: {
+    promoted: false,
+    viewed: false,
+    dismissed: false,
+    applied: false,
+    companies: false,
+    keywords: false,
+  },
+  blockedCompanies: [],
+  excludedKeywords: [],
+  postedWithin: null,
+  defaultToMostRecent: false,
+};
+
+const defaultActiveFilters: Record<FilterId, boolean> = {
+  ...defaultSettings.enabledFilters,
+};
+
 export const useAppStore = create<AppStore>()(
   persist(
     (set) => ({
-      settings: {
-        filters: {},
-        blockedCompanies: [],
-        excludedKeywords: [],
-        postedWithin: null,
-        defaultToMostRecent: false,
-      },
-      activeFilters: {
-        promoted: true,
-        viewed: true,
-        dismissed: true,
-        applied: true,
-        companies: true,
-        keywords: true,
-      },
-      counts: {},
+      settings: defaultSettings,
+      activeFilters: defaultActiveFilters,
+      filterCounts: {},
       actions: {
-        toggleFilter: (id) =>
+        setFilterEnabled: (id, enabled) =>
           set((s) => ({
             settings: {
               ...s.settings,
-              filters: { ...s.settings.filters, [id]: !s.settings.filters[id] },
+              enabledFilters: {
+                ...s.settings.enabledFilters,
+                [id]: enabled,
+              },
             },
+            ...(enabled &&
+              !s.settings.enabledFilters[id] && {
+                activeFilters: {
+                  ...s.activeFilters,
+                  [id]: true,
+                },
+              }),
           })),
-        toggleActive: (id) =>
+        toggleFilterActive: (id) =>
           set((s) => ({
-            activeFilters: {
-              ...s.activeFilters,
-              [id]: !s.activeFilters[id],
-            },
+            activeFilters: { ...s.activeFilters, [id]: !s.activeFilters[id] },
           })),
-        blockCompany: (company) =>
-          set((s) => ({
-            settings: {
-              ...s.settings,
-              blockedCompanies: [...s.settings.blockedCompanies, company],
-            },
-          })),
-        unblockCompany: (company) =>
-          set((s) => ({
-            settings: {
-              ...s.settings,
-              blockedCompanies: s.settings.blockedCompanies.filter(
-                (c) => c !== company,
-              ),
-            },
-          })),
-        addKeyword: (keyword) =>
-          set((s) => ({
-            settings: {
-              ...s.settings,
-              excludedKeywords: [...s.settings.excludedKeywords, keyword],
-            },
-          })),
-        removeKeyword: (keyword) =>
-          set((s) => ({
-            settings: {
-              ...s.settings,
-              excludedKeywords: s.settings.excludedKeywords.filter(
-                (k) => k !== keyword,
-              ),
-            },
-          })),
-        updateSettings: (partial) =>
-          set((s) => ({ settings: { ...s.settings, ...partial } })),
-        setCounts: (counts) =>
-          set((s) => ({ counts: { ...s.counts, ...counts } })),
+
+        setBlockedCompanies: (blockedCompanies) =>
+          set((s) => ({ settings: { ...s.settings, blockedCompanies } })),
+        setExcludedKeywords: (excludedKeywords) =>
+          set((s) => ({ settings: { ...s.settings, excludedKeywords } })),
+
+        setPostedWithin: (postedWithin) =>
+          set((s) => ({ settings: { ...s.settings, postedWithin } })),
+        setDefaultToMostRecent: (defaultToMostRecent) =>
+          set((s) => ({ settings: { ...s.settings, defaultToMostRecent } })),
+
+        setFilterCounts: (counts) =>
+          set((s) => ({ filterCounts: { ...s.filterCounts, ...counts } })),
       },
     }),
     {
@@ -125,7 +117,15 @@ export const useAppStore = create<AppStore>()(
 );
 
 export const useSettings = () => useAppStore(useShallow((s) => s.settings));
+export const useEnabledFilters = () =>
+  useAppStore(useShallow((s) => s.settings.enabledFilters));
 export const useActiveFilters = () =>
   useAppStore(useShallow((s) => s.activeFilters));
-export const useCounts = () => useAppStore(useShallow((s) => s.counts));
+export const useFilterCounts = () =>
+  useAppStore(useShallow((s) => s.filterCounts));
 export const useActions = () => useAppStore((s) => s.actions);
+
+export const isFilterApplied = (id: FilterId): boolean => {
+  const { settings, activeFilters } = useAppStore.getState();
+  return settings.enabledFilters[id] && activeFilters[id];
+};

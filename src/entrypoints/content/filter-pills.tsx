@@ -1,21 +1,25 @@
-import { FILTER_CONFIG, FilterId } from '@/constants';
-import { useActions, useActiveFilters, useCounts, useSettings } from '@/store';
+import { FILTERS, FilterId } from '@/constants';
+import {
+  isFilterApplied,
+  useActions,
+  useEnabledFilters,
+  useFilterCounts,
+} from '@/store';
 import { FilterPill } from './filter-pill';
 
 export function FilterPills() {
-  const settings = useSettings();
-  const counts = useCounts();
-  const active = useActiveFilters();
+  const enabledFilters = useEnabledFilters();
+  const filterCounts = useFilterCounts();
   const actions = useActions();
 
-  const pills = Object.entries(FILTER_CONFIG)
-    .filter(([id]) => settings.filters[id as FilterId])
+  const pills = Object.entries(FILTERS)
+    .filter(([id]) => enabledFilters[id as FilterId])
     .map(([id, meta]) => ({
       id,
       label: meta.label,
       color: meta.color,
-      count: counts[id as FilterId] ?? 0,
-      active: active[id as FilterId],
+      count: filterCounts[id as FilterId] ?? 0,
+      active: isFilterApplied(id as FilterId),
     }));
 
   return (
@@ -24,7 +28,7 @@ export function FilterPills() {
         <FilterPill
           key={id}
           {...rest}
-          onClick={() => actions.toggleActive(id as FilterId)}
+          onClick={() => actions.toggleFilterActive(id as FilterId)}
         />
       ))}
     </div>

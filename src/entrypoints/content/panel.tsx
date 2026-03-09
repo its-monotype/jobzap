@@ -35,36 +35,44 @@ export function Panel() {
           <Switch
             checked={settings.defaultToMostRecent}
             onCheckedChange={(checked) =>
-              actions.updateSettings({ defaultToMostRecent: checked })
+              actions.setDefaultToMostRecent(checked)
             }
           />
         </Row>
 
         <Row label="Promoted">
           <Switch
-            checked={settings.filters.promoted}
-            onCheckedChange={() => actions.toggleFilter('promoted')}
+            checked={settings.enabledFilters.promoted}
+            onCheckedChange={(checked) =>
+              actions.setFilterEnabled('promoted', checked)
+            }
           />
         </Row>
 
         <Row label="Viewed">
           <Switch
-            checked={settings.filters.viewed}
-            onCheckedChange={() => actions.toggleFilter('viewed')}
+            checked={settings.enabledFilters.viewed}
+            onCheckedChange={(checked) =>
+              actions.setFilterEnabled('viewed', checked)
+            }
           />
         </Row>
 
         <Row label="Dismissed">
           <Switch
-            checked={settings.filters.dismissed}
-            onCheckedChange={() => actions.toggleFilter('dismissed')}
+            checked={settings.enabledFilters.dismissed}
+            onCheckedChange={(checked) =>
+              actions.setFilterEnabled('dismissed', checked)
+            }
           />
         </Row>
 
         <Row label="Applied">
           <Switch
-            checked={settings.filters.applied}
-            onCheckedChange={() => actions.toggleFilter('applied')}
+            checked={settings.enabledFilters.applied}
+            onCheckedChange={(checked) =>
+              actions.setFilterEnabled('applied', checked)
+            }
           />
         </Row>
 

@@ -18,7 +18,7 @@ Browser extension that cuts the noise from your LinkedIn job search. Supports bo
 - [x] Settings persistence
 - [ ] Filter companies by name
 - [ ] Custom keywords filter
-- [ ] Default to most recent
+- [x] Default to most recent sort
 - [ ] Custom date posted filter
 - [ ] Chrome Web Store release
 

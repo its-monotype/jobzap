@@ -31,11 +31,11 @@ export function Panel() {
       <div className="mt-4 space-y-4">
         {/* TODO: Posted within (input + dropdown for units + preset buttons) */}
 
-        <Row label="Default to most recent">
+        <Row label="Default to Most Recent">
           <Switch
-            checked={settings.defaultToMostRecent}
+            checked={settings.defaultToRecentSort}
             onCheckedChange={(checked) =>
-              actions.setDefaultToMostRecent(checked)
+              actions.setDefaultToRecentSort(checked)
             }
           />
         </Row>

@@ -20,6 +20,22 @@ function isJobSearchPage(url: string): boolean {
   );
 }
 
+function isClassicSearchPage(url: string): boolean {
+  return new URL(url).pathname.startsWith('/jobs/search/');
+}
+
+function applyRecentSort(url: string): boolean {
+  if (!useAppStore.getState().settings.defaultToRecentSort) return false;
+  if (!isClassicSearchPage(url)) return false;
+
+  const parsed = new URL(url);
+  if (parsed.searchParams.has('sortBy')) return false;
+
+  parsed.searchParams.set('sortBy', 'DD');
+  location.replace(parsed.href);
+  return true;
+}
+
 export default defineContentScript({
   matches: ['https://www.linkedin.com/jobs/*'],
   runAt: 'document_idle',
@@ -27,6 +43,15 @@ export default defineContentScript({
 
   async main(ctx) {
     log('content script running', location.href);
+
+    if (!useAppStore.persist.hasHydrated()) {
+      await new Promise<void>((resolve) => {
+        const unsubscribe = useAppStore.persist.onFinishHydration(() => {
+          unsubscribe();
+          resolve();
+        });
+      });
+    }
 
     injectFilterStyles();
 
@@ -83,8 +108,19 @@ export default defineContentScript({
     };
 
     const unsubscribeStore = useAppStore.subscribe((state, prevState) => {
+      if (!isJobSearchPage(location.href)) return;
+
+      if (
+        state.settings.defaultToRecentSort !==
+          prevState.settings.defaultToRecentSort &&
+        state.settings.defaultToRecentSort
+      ) {
+        applyRecentSort(location.href);
+        return;
+      }
+
       if (state.toggledFilters !== prevState.toggledFilters) {
-        if (isJobSearchPage(location.href)) applyFilters();
+        applyFilters();
       }
     });
 
@@ -103,15 +139,14 @@ export default defineContentScript({
         return;
       }
 
+      if (applyRecentSort(newUrl.href)) return; // page will reload
+
       ui.mount();
       applyFilters();
 
       // TEMPORARY: LinkedIn renders legacy Ember search in an iframe when
       // navigating back from AI search, instead of a full reload.
-      if (
-        newUrl.pathname.startsWith('/jobs/search') &&
-        !newUrl.pathname.startsWith('/jobs/search-results')
-      ) {
+      if (isClassicSearchPage(newUrl.href)) {
         ctx.setTimeout(observeInteropIframe, 250);
       }
     });
@@ -123,6 +158,7 @@ export default defineContentScript({
     });
 
     if (isJobSearchPage(location.href)) {
+      if (applyRecentSort(location.href)) return; // page will reload
       ui.mount();
       applyFilters();
     }

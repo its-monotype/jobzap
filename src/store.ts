@@ -13,7 +13,7 @@ interface Settings {
   blockedCompanies: string[];
   excludedKeywords: string[];
   postedWithin: number | null;
-  defaultToMostRecent: boolean;
+  defaultToRecentSort: boolean;
 }
 
 interface AppStore {
@@ -28,7 +28,7 @@ interface AppStore {
     setExcludedKeywords: (keywords: string[]) => void;
 
     setPostedWithin: (value: number | null) => void;
-    setDefaultToMostRecent: (value: boolean) => void;
+    setDefaultToRecentSort: (value: boolean) => void;
 
     setFilterCounts: (counts: Partial<Record<FilterId, number>>) => void;
   };
@@ -58,7 +58,7 @@ const defaultSettings: Settings = {
   blockedCompanies: [],
   excludedKeywords: [],
   postedWithin: null,
-  defaultToMostRecent: false,
+  defaultToRecentSort: false,
 };
 
 export const useAppStore = create<AppStore>()(
@@ -99,8 +99,8 @@ export const useAppStore = create<AppStore>()(
 
         setPostedWithin: (postedWithin) =>
           set((s) => ({ settings: { ...s.settings, postedWithin } })),
-        setDefaultToMostRecent: (defaultToMostRecent) =>
-          set((s) => ({ settings: { ...s.settings, defaultToMostRecent } })),
+        setDefaultToRecentSort: (defaultToRecentSort) =>
+          set((s) => ({ settings: { ...s.settings, defaultToRecentSort } })),
 
         setFilterCounts: (counts) =>
           set((s) => ({ filterCounts: { ...s.filterCounts, ...counts } })),

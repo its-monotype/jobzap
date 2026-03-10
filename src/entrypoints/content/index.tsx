@@ -55,16 +55,6 @@ export default defineContentScript({
       timeoutId = ctx.setTimeout(applyFilters, 200);
     };
 
-    const unsubscribeStore = useAppStore.subscribe((state, prevState) => {
-      if (state.toggledFilters !== prevState.toggledFilters) {
-        if (isJobSearchPage(location.href)) applyFilters();
-      }
-    });
-
-    ctx.addEventListener(window, 'beforeunload', () => {
-      unsubscribeStore();
-    });
-
     const observeInteropIframe = () => {
       if (iframeObserver) return;
       const iframe = document.querySelector<HTMLIFrameElement>(
@@ -92,15 +82,17 @@ export default defineContentScript({
       );
     };
 
-    new MutationObserver(debouncedApply).observe(document.body, {
+    const unsubscribeStore = useAppStore.subscribe((state, prevState) => {
+      if (state.toggledFilters !== prevState.toggledFilters) {
+        if (isJobSearchPage(location.href)) applyFilters();
+      }
+    });
+
+    const bodyObserver = new MutationObserver(debouncedApply);
+    bodyObserver.observe(document.body, {
       childList: true,
       subtree: true,
     });
-
-    if (isJobSearchPage(location.href)) {
-      ui.mount();
-      applyFilters();
-    }
 
     ctx.addEventListener(window, 'wxt:locationchange', ({ newUrl }) => {
       iframeObserver?.disconnect();
@@ -123,5 +115,16 @@ export default defineContentScript({
         ctx.setTimeout(observeInteropIframe, 250);
       }
     });
+
+    ctx.onInvalidated(() => {
+      unsubscribeStore();
+      bodyObserver.disconnect();
+      iframeObserver?.disconnect();
+    });
+
+    if (isJobSearchPage(location.href)) {
+      ui.mount();
+      applyFilters();
+    }
   },
 });

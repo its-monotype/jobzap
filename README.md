@@ -13,11 +13,13 @@ Browser extension that cuts the noise from your LinkedIn job search. Supports bo
 ## Roadmap
 
 - [x] Core filtering content script
-- [ ] Floating filter pills (count hidden jobs, click to toggle)
-- [ ] Settings panel
-- [ ] Settings persistence
+- [x] Floating filter pills (count hidden jobs, click to toggle)
+- [x] Settings panel
+- [x] Settings persistence
 - [ ] Filter companies by name
 - [ ] Custom keywords filter
+- [ ] Default to most recent
+- [ ] Custom date posted filter
 - [ ] Chrome Web Store release
 
 ## License

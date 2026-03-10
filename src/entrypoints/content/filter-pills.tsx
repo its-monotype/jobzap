@@ -1,14 +1,15 @@
 import { FILTERS, FilterId } from '@/constants';
 import {
-  isFilterApplied,
   useActions,
   useEnabledFilters,
   useFilterCounts,
+  useToggledFilters,
 } from '@/store';
 import { FilterPill } from './filter-pill';
 
 export function FilterPills() {
   const enabledFilters = useEnabledFilters();
+  const toggledFilters = useToggledFilters();
   const filterCounts = useFilterCounts();
   const actions = useActions();
 
@@ -19,7 +20,7 @@ export function FilterPills() {
       label: meta.label,
       color: meta.color,
       count: filterCounts[id as FilterId] ?? 0,
-      active: isFilterApplied(id as FilterId),
+      active: toggledFilters[id as FilterId],
     }));
 
   return (
@@ -28,7 +29,7 @@ export function FilterPills() {
         <FilterPill
           key={id}
           {...rest}
-          onClick={() => actions.toggleFilterActive(id as FilterId)}
+          onClick={() => actions.toggleFilter(id as FilterId)}
         />
       ))}
     </div>

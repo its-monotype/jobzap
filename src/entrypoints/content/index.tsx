@@ -1,10 +1,11 @@
+import { useAppStore } from '@/store';
 import ReactDOM from 'react-dom/client';
 import { App } from './app';
 import {
   applyFilters,
   injectFilterStyles,
   INTEROP_IFRAME_SELECTOR,
-} from './filter';
+} from './dom-filter';
 
 function isJobSearchPage(url: string): boolean {
   const { pathname, searchParams } = new URL(url);
@@ -53,6 +54,16 @@ export default defineContentScript({
       if (timeoutId) window.clearTimeout(timeoutId);
       timeoutId = ctx.setTimeout(applyFilters, 200);
     };
+
+    const unsubscribeStore = useAppStore.subscribe((state, prevState) => {
+      if (state.toggledFilters !== prevState.toggledFilters) {
+        if (isJobSearchPage(location.href)) applyFilters();
+      }
+    });
+
+    ctx.addEventListener(window, 'beforeunload', () => {
+      unsubscribeStore();
+    });
 
     const observeInteropIframe = () => {
       if (iframeObserver) return;

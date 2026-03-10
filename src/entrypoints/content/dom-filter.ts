@@ -1,3 +1,6 @@
+import { FilterId } from '@/constants';
+import { useAppStore } from '@/store';
+
 const HIDE_CLASS = 'jz-hidden';
 const STYLE_ID = 'jz-style';
 
@@ -21,23 +24,6 @@ function getCardAnchors(): HTMLElement[] {
       ),
     ),
   );
-}
-
-function shouldHide(anchor: HTMLElement) {
-  const text = (anchor.textContent || '').toLowerCase();
-
-  const hideViewed = text.includes('viewed');
-  const hideApplied = text.includes('applied');
-  const hideDismissed =
-    !!anchor.querySelector('.job-card-list--is-dismissed') || // Classic
-    !!anchor.querySelector('[data-view-name="undo-dismiss-job"]'); // AI
-
-  return {
-    hide: hideViewed || hideApplied || hideDismissed,
-    hideViewed,
-    hideApplied,
-    hideDismissed,
-  };
 }
 
 function getHideTarget(anchor: HTMLElement): HTMLElement {
@@ -83,37 +69,46 @@ export function injectFilterStyles(doc: Document = document) {
 }
 
 export function applyFilters() {
-  log('applying filters');
+  const { toggledFilters, actions } = useAppStore.getState();
+  const cards = getCardAnchors();
 
-  const cardAnchors = getCardAnchors();
+  const counts: Partial<Record<FilterId, number>> = {};
+  let aiCards = 0;
+  let classicCards = 0;
 
-  let aiCardCount = 0;
-  let classicCardCount = 0;
-  let hiddenViewed = 0;
-  let hiddenApplied = 0;
-  let hiddenDismissed = 0;
+  for (const card of cards) {
+    if (card.matches(AI_CARD_SELECTOR)) aiCards++;
+    if (card.matches(CLASSIC_CARD_SELECTOR)) classicCards++;
 
-  for (const anchor of cardAnchors) {
-    if (anchor.matches(AI_CARD_SELECTOR)) aiCardCount++;
-    if (anchor.matches(CLASSIC_CARD_SELECTOR)) classicCardCount++;
+    const text = (card.textContent || '').toLowerCase();
+    const matches = {
+      promoted: toggledFilters.promoted && text.includes('promoted'),
+      viewed: toggledFilters.viewed && text.includes('viewed'),
+      applied: toggledFilters.applied && text.includes('applied'),
+      dismissed:
+        toggledFilters.dismissed &&
+        (!!card.querySelector('.job-card-list--is-dismissed') ||
+          !!card.querySelector('[data-view-name="undo-dismiss-job"]')),
+    };
 
-    const decision = shouldHide(anchor);
-    const hideTarget = getHideTarget(anchor);
-    hideTarget.classList.toggle(HIDE_CLASS, decision.hide);
+    getHideTarget(card).classList.toggle(
+      HIDE_CLASS,
+      Object.values(matches).some(Boolean),
+    );
 
-    if (decision.hideViewed) hiddenViewed++;
-    if (decision.hideApplied) hiddenApplied++;
-    if (decision.hideDismissed) hiddenDismissed++;
+    for (const [id, match] of Object.entries(matches)) {
+      if (match) counts[id as FilterId] = (counts[id as FilterId] ?? 0) + 1;
+    }
   }
 
   normalizeAiHr();
 
+  actions.setFilterCounts(counts);
+
   log('applyFilters', {
-    total: cardAnchors.length,
-    aiCardCount,
-    classicCardCount,
-    hiddenViewed,
-    hiddenApplied,
-    hiddenDismissed,
+    total: cards.length,
+    aiCards,
+    classicCards,
+    ...counts,
   });
 }

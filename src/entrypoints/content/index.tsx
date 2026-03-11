@@ -151,6 +151,7 @@ export default defineContentScript({
     });
 
     ctx.onInvalidated(() => {
+      ui.remove();
       unsubscribeStore();
       bodyObserver.disconnect();
       iframeObserver?.disconnect();

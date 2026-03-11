@@ -140,8 +140,7 @@ export default defineContentScript({
       }
 
       if (applyRecentSort(newUrl.href)) return; // page will reload
-
-      ui.mount();
+      if (!ui.mounted) ui.mount();
       applyFilters();
 
       // TEMPORARY: LinkedIn renders legacy Ember search in an iframe when

@@ -1,14 +1,25 @@
 # JobZap
 
-Browser extension that cuts the noise from your LinkedIn job search. Supports both classic and new AI-powered LinkedIn search.
+Browser extension that cuts the noise from your LinkedIn job search.
 
 > 🚧 Work in progress, first version coming soon.
 
-## Filters
+## Features
 
-- Hide **viewed** jobs
-- Hide **applied** jobs
-- Hide **dismissed** jobs
+### Filters
+
+Hide jobs matching any combination of:
+
+- Promoted
+- Viewed
+- Applied
+- Dismissed
+- Specific companies
+- Custom keywords
+
+### Search controls
+
+- Default to most recent sort automatically
 
 ## Roadmap
 
@@ -16,8 +27,8 @@ Browser extension that cuts the noise from your LinkedIn job search. Supports bo
 - [x] Floating filter pills (count hidden jobs, click to toggle)
 - [x] Settings panel
 - [x] Settings persistence
-- [ ] Filter companies by name
-- [ ] Custom keywords filter
+- [x] Filter by company name
+- [x] Filter by keywords
 - [x] Default to most recent sort
 - [ ] Custom date posted filter
 - [ ] Chrome Web Store release

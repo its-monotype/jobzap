@@ -1,6 +1,9 @@
 import { Logo } from '@/components/icons/logo';
+import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { useActions, useSettings } from '@/store';
+import { BlockedCompanies } from './blocked-companies';
+import { ExcludedKeywords } from './excluded-keywords';
 
 function Row({
   label,
@@ -11,7 +14,7 @@ function Row({
 }) {
   return (
     <div className="flex items-center justify-between">
-      <div>{label}</div>
+      <div className="text-sm">{label}</div>
       {children}
     </div>
   );
@@ -22,8 +25,8 @@ export function Panel() {
   const actions = useActions();
 
   return (
-    <div className="w-96 rounded-lg bg-white p-4 shadow-lg">
-      <div className="flex gap-2">
+    <div className="w-80 rounded-lg bg-white p-4 shadow-lg">
+      <div className="flex items-center gap-2">
         <Logo className="size-6" />
         <span className="text-lg font-semibold">JobZap</span>
       </div>
@@ -40,6 +43,8 @@ export function Panel() {
           />
         </Row>
 
+        <Separator />
+
         <Row label="Promoted">
           <Switch
             checked={settings.enabledFilters.promoted}
@@ -48,7 +53,6 @@ export function Panel() {
             }
           />
         </Row>
-
         <Row label="Viewed">
           <Switch
             checked={settings.enabledFilters.viewed}
@@ -57,7 +61,6 @@ export function Panel() {
             }
           />
         </Row>
-
         <Row label="Dismissed">
           <Switch
             checked={settings.enabledFilters.dismissed}
@@ -66,7 +69,6 @@ export function Panel() {
             }
           />
         </Row>
-
         <Row label="Applied">
           <Switch
             checked={settings.enabledFilters.applied}
@@ -76,7 +78,10 @@ export function Panel() {
           />
         </Row>
 
-        {/* TODO: Blocked companies, excluded keywords (tags input component required) */}
+        <Separator />
+
+        <BlockedCompanies />
+        <ExcludedKeywords />
       </div>
     </div>
   );

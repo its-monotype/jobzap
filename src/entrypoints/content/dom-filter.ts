@@ -11,6 +11,38 @@ const AI_CARD_LIST_SELECTOR = '[componentkey="SearchResultsMainContent"]';
 // iframe LinkedIn uses to run legacy Ember search inside the React shell
 export const INTEROP_IFRAME_SELECTOR = 'iframe[data-testid="interop-iframe"]';
 
+// TODO: Add AI cards support
+const CLASSIC_COMPANY_SELECTORS = [
+  '.artdeco-entity-lockup__subtitle span',
+  '.job-card-container__primary-description',
+  '.job-card-container__company-name',
+];
+
+// TODO: Add AI cards support
+const CLASSIC_TITLE_SELECTORS = [
+  '.job-card-list__title',
+  '.artdeco-entity-lockup__title',
+  '.job-card-container__link',
+];
+
+function extractText(card: HTMLElement, selectors: string[]): string | null {
+  for (const sel of selectors) {
+    const el = card.querySelector<HTMLElement>(sel);
+    const text = el?.textContent?.trim();
+    if (text) return text;
+  }
+  return null;
+}
+
+function collectVisibleCompanies(cards: HTMLElement[]): string[] {
+  const seen = new Set<string>();
+  for (const card of cards) {
+    const company = extractText(card, CLASSIC_COMPANY_SELECTORS);
+    if (company) seen.add(company);
+  }
+  return Array.from(seen).sort();
+}
+
 function getCardAnchors(): HTMLElement[] {
   const docs: Document[] = [document];
   const iframeDoc = document.querySelector<HTMLIFrameElement>(
@@ -69,8 +101,15 @@ export function injectFilterStyles(doc: Document = document) {
 }
 
 export function applyFilters() {
-  const { toggledFilters, actions } = useAppStore.getState();
+  const { activeFilters, settings, actions } = useAppStore.getState();
   const cards = getCardAnchors();
+
+  const blockedCompanies = settings.blockedCompanies.map((c) =>
+    c.toLowerCase(),
+  );
+  const excludedKeywords = settings.excludedKeywords.map((k) =>
+    k.toLowerCase(),
+  );
 
   const counts: Partial<Record<FilterId, number>> = {};
   let aiCards = 0;
@@ -81,14 +120,28 @@ export function applyFilters() {
     if (card.matches(CLASSIC_CARD_SELECTOR)) classicCards++;
 
     const text = (card.textContent || '').toLowerCase();
+
+    const company =
+      extractText(card, CLASSIC_COMPANY_SELECTORS)?.toLowerCase() ?? '';
+    const title =
+      extractText(card, CLASSIC_TITLE_SELECTORS)?.toLowerCase() ?? '';
+
     const matches = {
-      promoted: toggledFilters.promoted && text.includes('promoted'),
-      viewed: toggledFilters.viewed && text.includes('viewed'),
-      applied: toggledFilters.applied && text.includes('applied'),
+      promoted: activeFilters.promoted && text.includes('promoted'),
+      viewed: activeFilters.viewed && text.includes('viewed'),
+      applied: activeFilters.applied && text.includes('applied'),
       dismissed:
-        toggledFilters.dismissed &&
+        activeFilters.dismissed &&
         (!!card.querySelector('.job-card-list--is-dismissed') ||
           !!card.querySelector('[data-view-name="undo-dismiss-job"]')),
+      companies:
+        activeFilters.companies &&
+        company.length > 0 &&
+        blockedCompanies.some((b) => company.includes(b)),
+      keywords:
+        activeFilters.keywords &&
+        title.length > 0 &&
+        excludedKeywords.some((k) => title.includes(k)),
     };
 
     getHideTarget(card).classList.toggle(
@@ -104,6 +157,7 @@ export function applyFilters() {
   normalizeAiHr();
 
   actions.setFilterCounts(counts);
+  actions.setVisibleCompanies(collectVisibleCompanies(cards));
 
   log('applyFilters', {
     total: cards.length,

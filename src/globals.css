@@ -142,7 +142,7 @@
   }
 
   body {
-    @apply font-sans text-foreground;
+    @apply relative z-9999 font-sans text-foreground;
   }
 
   button:not(:disabled),

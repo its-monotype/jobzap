@@ -18,11 +18,13 @@ interface Settings {
 
 interface AppStore {
   settings: Settings;
-  toggledFilters: Record<FilterId, boolean>;
+  activeFilters: Record<FilterId, boolean>;
   filterCounts: Partial<Record<FilterId, number>>;
+  visibleCompanies: string[];
   actions: {
     setFilterEnabled: (id: FilterId, enabled: boolean) => void;
-    toggleFilter: (id: FilterId) => void;
+    setFilterActive: (id: FilterId, active: boolean) => void;
+    toggleFilterActive: (id: FilterId) => void;
 
     setBlockedCompanies: (companies: string[]) => void;
     setExcludedKeywords: (keywords: string[]) => void;
@@ -31,6 +33,8 @@ interface AppStore {
     setDefaultToRecentSort: (value: boolean) => void;
 
     setFilterCounts: (counts: Partial<Record<FilterId, number>>) => void;
+
+    setVisibleCompanies: (companies: string[]) => void;
   };
 }
 
@@ -65,10 +69,11 @@ export const useAppStore = create<AppStore>()(
   persist(
     (set) => ({
       settings: defaultSettings,
-      toggledFilters: {
+      activeFilters: {
         ...defaultSettings.enabledFilters,
       },
       filterCounts: {},
+      visibleCompanies: [],
       actions: {
         setFilterEnabled: (id, enabled) =>
           set((s) => ({
@@ -79,16 +84,23 @@ export const useAppStore = create<AppStore>()(
                 [id]: enabled,
               },
             },
-            toggledFilters: {
-              ...s.toggledFilters,
+            activeFilters: {
+              ...s.activeFilters,
               [id]: enabled,
             },
           })),
-        toggleFilter: (id) =>
+        setFilterActive: (id, active) =>
           set((s) => ({
-            toggledFilters: {
-              ...s.toggledFilters,
-              [id]: !s.toggledFilters[id],
+            activeFilters: {
+              ...s.activeFilters,
+              [id]: active,
+            },
+          })),
+        toggleFilterActive: (id) =>
+          set((s) => ({
+            activeFilters: {
+              ...s.activeFilters,
+              [id]: !s.activeFilters[id],
             },
           })),
 
@@ -104,24 +116,28 @@ export const useAppStore = create<AppStore>()(
 
         setFilterCounts: (counts) =>
           set((s) => ({ filterCounts: { ...s.filterCounts, ...counts } })),
+
+        setVisibleCompanies: (visibleCompanies) => set({ visibleCompanies }),
       },
     }),
     {
       name: 'jobzap',
       partialize: (state) => ({
         settings: state.settings,
-        toggledFilters: state.toggledFilters,
+        activeFilters: state.activeFilters,
       }),
       storage: createJSONStorage(() => wxtStorage),
     },
   ),
 );
 
+export const useActions = () => useAppStore((s) => s.actions);
 export const useSettings = () => useAppStore(useShallow((s) => s.settings));
 export const useEnabledFilters = () =>
   useAppStore(useShallow((s) => s.settings.enabledFilters));
-export const useToggledFilters = () =>
-  useAppStore(useShallow((s) => s.toggledFilters));
+export const useActiveFilters = () =>
+  useAppStore(useShallow((s) => s.activeFilters));
 export const useFilterCounts = () =>
   useAppStore(useShallow((s) => s.filterCounts));
-export const useActions = () => useAppStore((s) => s.actions);
+export const useVisibleCompanies = () =>
+  useAppStore(useShallow((s) => s.visibleCompanies));

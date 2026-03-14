@@ -1,3 +1,5 @@
+import '@/globals.css';
+
 import { useAppStore } from '@/store';
 import ReactDOM from 'react-dom/client';
 import { App } from './app';
@@ -6,6 +8,7 @@ import {
   injectFilterStyles,
   INTEROP_IFRAME_SELECTOR,
 } from './dom-filter';
+import { PortalContainerProvider } from './portal-container';
 
 function isJobSearchPage(url: string): boolean {
   const { pathname, searchParams } = new URL(url);
@@ -59,11 +62,16 @@ export default defineContentScript({
       name: 'jobzap-ui',
       position: 'inline',
       anchor: 'body',
+      isolateEvents: ['keydown', 'keyup', 'keypress', 'wheel'],
       onMount: (container) => {
         const app = document.createElement('div');
         container.append(app);
         const root = ReactDOM.createRoot(app);
-        root.render(<App />);
+        root.render(
+          <PortalContainerProvider container={container}>
+            <App />
+          </PortalContainerProvider>,
+        );
         return root;
       },
       onRemove: (root) => {
@@ -115,11 +123,16 @@ export default defineContentScript({
           prevState.settings.defaultToRecentSort &&
         state.settings.defaultToRecentSort
       ) {
-        applyRecentSort(location.href);
+        applyRecentSort(location.href); // page will reload
         return;
       }
 
-      if (state.toggledFilters !== prevState.toggledFilters) {
+      if (
+        state.activeFilters !== prevState.activeFilters ||
+        state.settings.blockedCompanies !==
+          prevState.settings.blockedCompanies ||
+        state.settings.excludedKeywords !== prevState.settings.excludedKeywords
+      ) {
         applyFilters();
       }
     });

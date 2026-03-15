@@ -114,8 +114,7 @@ export const useAppStore = create<AppStore>()(
         setDefaultToRecentSort: (defaultToRecentSort) =>
           set((s) => ({ settings: { ...s.settings, defaultToRecentSort } })),
 
-        setFilterCounts: (counts) =>
-          set((s) => ({ filterCounts: { ...s.filterCounts, ...counts } })),
+        setFilterCounts: (counts) => set({ filterCounts: counts }),
 
         setVisibleCompanies: (visibleCompanies) => set({ visibleCompanies }),
       },

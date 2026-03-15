@@ -4,91 +4,135 @@ import { useAppStore } from '@/store';
 const HIDE_CLASS = 'jz-hidden';
 const STYLE_ID = 'jz-style';
 
-const CLASSIC_CARD_SELECTOR = 'li[data-occludable-job-id]';
-const AI_CARD_SELECTOR = '[data-view-name="job-search-job-card"]';
-const AI_CARD_LIST_SELECTOR = '[componentkey="SearchResultsMainContent"]';
-
 // iframe LinkedIn uses to run legacy Ember search inside the React shell
 export const INTEROP_IFRAME_SELECTOR = 'iframe[data-testid="interop-iframe"]';
 
-// TODO: Add AI cards support
-const CLASSIC_COMPANY_SELECTORS = [
-  '.artdeco-entity-lockup__subtitle span',
-  '.job-card-container__primary-description',
-  '.job-card-container__company-name',
-];
+const CLASSIC_CARD_SELECTOR = 'li[data-occludable-job-id]';
 
-// TODO: Add AI cards support
-const CLASSIC_TITLE_SELECTORS = [
-  '.job-card-list__title',
-  '.artdeco-entity-lockup__title',
-  '.job-card-container__link',
-];
+const DISMISS_BTN = 'button[aria-label^="Dismiss "][aria-label$=" job"]';
+const DISMISSED_UNDO_BTN = 'button[aria-label$=" job is dismissed, undo"]'; // present on dismissed cards of both types
 
-function extractText(card: HTMLElement, selectors: string[]): string | null {
+const AI_LIST_SELECTOR = '[componentkey="SearchResultsMainContent"]';
+const AI_CARD_MARKER = `${DISMISS_BTN}, ${DISMISSED_UNDO_BTN}`;
+
+type CardRef = {
+  kind: 'classic' | 'ai';
+  el: HTMLElement;
+};
+
+function normalizeText(value: string | null | undefined): string {
+  return value?.replace(/\s+/g, ' ').trim() ?? '';
+}
+
+/** Queries selector and returns normalized textContent, empty string if not found. */
+function getText(root: ParentNode, selector: string): string {
+  return normalizeText(root.querySelector<HTMLElement>(selector)?.textContent);
+}
+
+/** Queries selector and returns normalized attribute value, empty string if not found. */
+function getAttr(root: ParentNode, selector: string, attr: string): string {
+  return normalizeText(
+    root.querySelector<HTMLElement>(selector)?.getAttribute(attr),
+  );
+}
+
+function firstText(root: HTMLElement, selectors: string[]): string {
   for (const sel of selectors) {
-    const el = card.querySelector<HTMLElement>(sel);
-    const text = el?.textContent?.trim();
+    const text = getText(root, sel);
     if (text) return text;
   }
-  return null;
+  return '';
 }
 
-function collectVisibleCompanies(cards: HTMLElement[]): string[] {
-  const seen = new Set<string>();
-  for (const card of cards) {
-    const company = extractText(card, CLASSIC_COMPANY_SELECTORS);
-    if (company) seen.add(company);
-  }
-  return Array.from(seen).sort();
+function extractClassicMeta(card: HTMLElement) {
+  return {
+    title: firstText(card, [
+      '.artdeco-entity-lockup__title .visually-hidden',
+      '.artdeco-entity-lockup__title strong',
+    ]),
+    company: firstText(card, [
+      '.artdeco-entity-lockup__subtitle > span',
+      '.artdeco-entity-lockup__subtitle',
+    ]),
+  };
 }
 
-function getCardAnchors(): HTMLElement[] {
+function extractAiMeta(card: HTMLElement) {
+  // classes are hashed at build time
+  // aria-labels on action buttons are screen-reader requirements, stable across deploys
+  const dismissLabel = getAttr(card, DISMISS_BTN, 'aria-label');
+  const undoLabel = getAttr(card, DISMISSED_UNDO_BTN, 'aria-label');
+
+  const title =
+    normalizeText(
+      dismissLabel.replace(/^Dismiss\s+/i, '').replace(/\s+job$/i, ''),
+    ) ||
+    normalizeText(undoLabel.replace(/\s+job is dismissed,\s*undo$/i, '')) ||
+    getText(card, 'p'); // fallback: first <p> is always the title
+
+  // p-tag order is consistently [title, company, location, ...footer] across all observed cards
+  const paras = Array.from(card.querySelectorAll<HTMLElement>('p'))
+    .map((el) => normalizeText(el.textContent))
+    .filter(Boolean);
+
+  return {
+    title,
+    company: paras[1] !== paras[0] ? (paras[1] ?? '') : '',
+  };
+}
+
+function isClassicDismissed(card: HTMLElement): boolean {
+  return (
+    !!card.querySelector('.job-card-list--is-dismissed') ||
+    !!card.querySelector(DISMISSED_UNDO_BTN)
+  );
+}
+
+function isAiDismissed(card: HTMLElement): boolean {
+  return !!card.querySelector(DISMISSED_UNDO_BTN);
+}
+
+function collectClassicCards(doc: Document): CardRef[] {
+  return Array.from(
+    doc.querySelectorAll<HTMLElement>(CLASSIC_CARD_SELECTOR),
+  ).map((el) => ({ kind: 'classic', el }));
+}
+
+function collectAiCards(doc: Document): CardRef[] {
+  const list = doc.querySelector<HTMLElement>(AI_LIST_SELECTOR);
+  if (!list) return [];
+
+  return (Array.from(list.children) as HTMLElement[])
+    .filter((el) => el.tagName !== 'HR' && el.querySelector(AI_CARD_MARKER))
+    .map((el) => ({ kind: 'ai', el }));
+}
+
+function getCards(): CardRef[] {
   const docs: Document[] = [document];
   const iframeDoc = document.querySelector<HTMLIFrameElement>(
     INTEROP_IFRAME_SELECTOR,
   )?.contentDocument;
   if (iframeDoc) docs.push(iframeDoc);
-  return docs.flatMap((doc) =>
-    Array.from(
-      doc.querySelectorAll<HTMLElement>(
-        `${CLASSIC_CARD_SELECTOR}, ${AI_CARD_SELECTOR}`,
-      ),
-    ),
-  );
+
+  return docs.flatMap((doc) => [
+    ...collectClassicCards(doc),
+    ...collectAiCards(doc),
+  ]);
 }
 
-function getHideTarget(anchor: HTMLElement): HTMLElement {
-  // AI Search: anchor is nested, but the visible block is its parent (non-display:contents)
-  if (anchor.matches(AI_CARD_SELECTOR) && anchor.parentElement) {
-    return anchor.parentElement;
-  }
-
-  // Classic Search: anchor is the visible list item already
-  return anchor;
-}
-
+/** Hides the <hr> separator after each hidden card to avoid stacking dividers between visible cards. */
 function normalizeAiHr() {
-  const aiCard = document.querySelector(AI_CARD_SELECTOR);
-  if (!aiCard) return;
+  const list = document.querySelector<HTMLElement>(AI_LIST_SELECTOR);
+  if (!list) return;
 
-  const listContainer = aiCard.closest<HTMLElement>(AI_CARD_LIST_SELECTOR);
-  if (!listContainer) return;
-
-  for (const el of Array.from(listContainer.children)) {
+  for (const el of Array.from(list.children)) {
     if (el.tagName !== 'HR') continue;
-
     const prev = el.previousElementSibling as HTMLElement | null;
     if (!prev) {
       el.classList.add(HIDE_CLASS);
       continue;
     }
-
-    const block = prev.firstElementChild as HTMLElement | null;
-    const isVisible = block && !block.classList.contains(HIDE_CLASS);
-
-    // show hr only if previous card is visible
-    el.classList.toggle(HIDE_CLASS, !isVisible);
+    el.classList.toggle(HIDE_CLASS, prev.classList.contains(HIDE_CLASS));
   }
 }
 
@@ -102,7 +146,7 @@ export function injectFilterStyles(doc: Document = document) {
 
 export function applyFilters() {
   const { activeFilters, settings, actions } = useAppStore.getState();
-  const cards = getCardAnchors();
+  const cards = getCards();
 
   const blockedCompanies = settings.blockedCompanies.map((c) =>
     c.toLowerCase(),
@@ -112,19 +156,21 @@ export function applyFilters() {
   );
 
   const counts: Partial<Record<FilterId, number>> = {};
+  const visibleCompanies = new Set<string>();
   let aiCards = 0;
   let classicCards = 0;
 
   for (const card of cards) {
-    if (card.matches(AI_CARD_SELECTOR)) aiCards++;
-    if (card.matches(CLASSIC_CARD_SELECTOR)) classicCards++;
+    if (card.kind === 'ai') aiCards++;
+    else classicCards++;
 
-    const text = (card.textContent || '').toLowerCase();
-
-    const company =
-      extractText(card, CLASSIC_COMPANY_SELECTORS)?.toLowerCase() ?? '';
-    const title =
-      extractText(card, CLASSIC_TITLE_SELECTORS)?.toLowerCase() ?? '';
+    const text = (card.el.textContent ?? '').toLowerCase();
+    const meta =
+      card.kind === 'classic'
+        ? extractClassicMeta(card.el)
+        : extractAiMeta(card.el);
+    const title = meta.title.toLowerCase();
+    const company = meta.company.toLowerCase();
 
     const matches = {
       promoted: activeFilters.promoted && text.includes('promoted'),
@@ -132,8 +178,9 @@ export function applyFilters() {
       applied: activeFilters.applied && text.includes('applied'),
       dismissed:
         activeFilters.dismissed &&
-        (!!card.querySelector('.job-card-list--is-dismissed') ||
-          !!card.querySelector('[data-view-name="undo-dismiss-job"]')),
+        (card.kind === 'classic'
+          ? isClassicDismissed(card.el)
+          : isAiDismissed(card.el)),
       companies:
         activeFilters.companies &&
         company.length > 0 &&
@@ -144,20 +191,19 @@ export function applyFilters() {
         excludedKeywords.some((k) => title.includes(k)),
     };
 
-    getHideTarget(card).classList.toggle(
-      HIDE_CLASS,
-      Object.values(matches).some(Boolean),
-    );
+    card.el.classList.toggle(HIDE_CLASS, Object.values(matches).some(Boolean));
 
     for (const [id, match] of Object.entries(matches)) {
       if (match) counts[id as FilterId] = (counts[id as FilterId] ?? 0) + 1;
     }
+
+    if (meta.company) visibleCompanies.add(meta.company);
   }
 
   normalizeAiHr();
 
   actions.setFilterCounts(counts);
-  actions.setVisibleCompanies(collectVisibleCompanies(cards));
+  actions.setVisibleCompanies(Array.from(visibleCompanies).sort());
 
   log('applyFilters', {
     total: cards.length,

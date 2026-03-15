@@ -144,6 +144,10 @@ export function injectFilterStyles(doc: Document = document) {
   (doc.head ?? doc.documentElement).appendChild(s);
 }
 
+export function removeFilterStyles(doc: Document = document) {
+  doc.getElementById(STYLE_ID)?.remove();
+}
+
 export function applyFilters() {
   const { activeFilters, settings, actions } = useAppStore.getState();
   const cards = getCards();

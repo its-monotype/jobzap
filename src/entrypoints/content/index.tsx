@@ -8,6 +8,7 @@ import {
   applyFilters,
   injectFilterStyles,
   INTEROP_IFRAME_SELECTOR,
+  removeFilterStyles,
 } from './dom-filter';
 
 function isJobSearchPage(url: string): boolean {
@@ -127,7 +128,7 @@ export default defineContentScript({
 
     const debouncedApply = () => {
       if (!isJobSearchPage(location.href)) return;
-      if (timeoutId) window.clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
       timeoutId = ctx.setTimeout(applyFilters, 200);
     };
 
@@ -211,6 +212,16 @@ export default defineContentScript({
       unsubscribeStore();
       bodyObserver.disconnect();
       iframeObserver?.disconnect();
+      iframeObserver = null;
+
+      removeFilterStyles(document);
+
+      const iframeDoc = document.querySelector<HTMLIFrameElement>(
+        INTEROP_IFRAME_SELECTOR,
+      )?.contentDocument;
+      if (iframeDoc) {
+        removeFilterStyles(iframeDoc);
+      }
     });
 
     if (isJobSearchPage(location.href)) {

@@ -20,6 +20,7 @@ Hide jobs matching any combination of:
 ### Search controls
 
 - Default to most recent sort automatically
+- Custom date posted filter (e.g. last 10 days)
 
 ## Roadmap
 
@@ -30,7 +31,7 @@ Hide jobs matching any combination of:
 - [x] Filter by company name
 - [x] Filter by keywords
 - [x] Default to most recent sort
-- [ ] Custom date posted filter
+- [x] Custom date posted filter
 - [ ] Chrome Web Store release
 
 ## License

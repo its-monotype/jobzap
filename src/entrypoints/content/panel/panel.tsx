@@ -4,14 +4,14 @@ import { Switch } from '@/components/ui/switch';
 import { useActions, useSettings } from '@/store';
 import { BlockedCompanies } from './blocked-companies';
 import { ExcludedKeywords } from './excluded-keywords';
+import { PostedWithin } from './posted-within';
 
-function Row({
-  label,
-  children,
-}: {
+type SettingRowProps = {
   label: string;
   children: React.ReactNode;
-}) {
+};
+
+function SettingRow({ label, children }: SettingRowProps) {
   return (
     <div className="flex items-center justify-between">
       <div className="text-sm">{label}</div>
@@ -32,51 +32,51 @@ export function Panel() {
       </div>
 
       <div className="mt-4 space-y-4">
-        {/* TODO: Posted within (input + dropdown for units + preset buttons) */}
+        <PostedWithin />
 
-        <Row label="Default to Most Recent">
+        <SettingRow label="Default to Most Recent">
           <Switch
             checked={settings.defaultToRecentSort}
             onCheckedChange={(checked) =>
               actions.setDefaultToRecentSort(checked)
             }
           />
-        </Row>
+        </SettingRow>
 
         <Separator />
 
-        <Row label="Promoted">
+        <SettingRow label="Promoted">
           <Switch
             checked={settings.enabledFilters.promoted}
             onCheckedChange={(checked) =>
               actions.setFilterEnabled('promoted', checked)
             }
           />
-        </Row>
-        <Row label="Viewed">
+        </SettingRow>
+        <SettingRow label="Viewed">
           <Switch
             checked={settings.enabledFilters.viewed}
             onCheckedChange={(checked) =>
               actions.setFilterEnabled('viewed', checked)
             }
           />
-        </Row>
-        <Row label="Dismissed">
+        </SettingRow>
+        <SettingRow label="Dismissed">
           <Switch
             checked={settings.enabledFilters.dismissed}
             onCheckedChange={(checked) =>
               actions.setFilterEnabled('dismissed', checked)
             }
           />
-        </Row>
-        <Row label="Applied">
+        </SettingRow>
+        <SettingRow label="Applied">
           <Switch
             checked={settings.enabledFilters.applied}
             onCheckedChange={(checked) =>
               actions.setFilterEnabled('applied', checked)
             }
           />
-        </Row>
+        </SettingRow>
 
         <Separator />
 

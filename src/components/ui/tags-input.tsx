@@ -1,4 +1,4 @@
-import { usePortalContainer } from '@/entrypoints/content/portal-container';
+import { usePortalContainer } from '@/contexts/portal-container';
 import { cn } from '@/lib/utils';
 import { Combobox } from '@base-ui/react/combobox';
 import { CheckIcon, XIcon } from 'lucide-react';

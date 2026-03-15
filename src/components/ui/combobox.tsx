@@ -8,7 +8,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from '@/components/ui/input-group';
-import { usePortalContainer } from '@/entrypoints/content/portal-container';
+import { usePortalContainer } from '@/contexts/portal-container';
 import { cn } from '@/lib/utils';
 import { CheckIcon, ChevronDownIcon, XIcon } from 'lucide-react';
 

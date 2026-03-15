@@ -1,5 +1,6 @@
 import '@/globals.css';
 
+import { PortalContainerProvider } from '@/contexts/portal-container';
 import { useAppStore } from '@/store';
 import ReactDOM from 'react-dom/client';
 import { App } from './app';
@@ -8,7 +9,6 @@ import {
   injectFilterStyles,
   INTEROP_IFRAME_SELECTOR,
 } from './dom-filter';
-import { PortalContainerProvider } from './portal-container';
 
 function isJobSearchPage(url: string): boolean {
   const { pathname, searchParams } = new URL(url);
@@ -27,6 +27,26 @@ function isClassicSearchPage(url: string): boolean {
   return new URL(url).pathname.startsWith('/jobs/search/');
 }
 
+function applyPostedWithin(url: string): boolean {
+  const { postedWithin } = useAppStore.getState().settings;
+  if (!isClassicSearchPage(url)) return false;
+
+  const parsed = new URL(url);
+  const expected = postedWithin ? `r${postedWithin * 60}` : null;
+  const current = parsed.searchParams.get('f_TPR');
+
+  if (current === expected) return false;
+
+  if (expected) {
+    parsed.searchParams.set('f_TPR', expected);
+  } else {
+    parsed.searchParams.delete('f_TPR');
+  }
+
+  location.replace(parsed.href);
+  return true;
+}
+
 function applyRecentSort(url: string): boolean {
   if (!useAppStore.getState().settings.defaultToRecentSort) return false;
   if (!isClassicSearchPage(url)) return false;
@@ -37,6 +57,27 @@ function applyRecentSort(url: string): boolean {
   parsed.searchParams.set('sortBy', 'DD');
   location.replace(parsed.href);
   return true;
+}
+
+/** Applies URL-based filters that trigger a page reload. Returns true if a reload was initiated. */
+function applyUrlModifiers(url: string): boolean {
+  if (applyPostedWithin(url)) return true;
+  if (applyRecentSort(url)) return true;
+  return false;
+}
+
+function syncFromUrl(url: string) {
+  if (!isClassicSearchPage(url)) return;
+
+  const parsed = new URL(url);
+  const fTPR = parsed.searchParams.get('f_TPR');
+
+  if (fTPR?.startsWith('r')) {
+    const seconds = Number(fTPR.slice(1));
+    if (Number.isFinite(seconds) && seconds > 0) {
+      useAppStore.getState().actions.setPostedWithin(Math.round(seconds / 60));
+    }
+  }
 }
 
 export default defineContentScript({
@@ -55,6 +96,8 @@ export default defineContentScript({
         });
       });
     }
+
+    syncFromUrl(location.href);
 
     injectFilterStyles();
 
@@ -119,12 +162,12 @@ export default defineContentScript({
       if (!isJobSearchPage(location.href)) return;
 
       if (
+        state.settings.postedWithin !== prevState.settings.postedWithin ||
         state.settings.defaultToRecentSort !==
-          prevState.settings.defaultToRecentSort &&
-        state.settings.defaultToRecentSort
+          prevState.settings.defaultToRecentSort
       ) {
-        applyRecentSort(location.href); // page will reload
-        return;
+        applyUrlModifiers(location.href);
+        return; // page will reload
       }
 
       if (
@@ -152,7 +195,7 @@ export default defineContentScript({
         return;
       }
 
-      if (applyRecentSort(newUrl.href)) return; // page will reload
+      if (applyUrlModifiers(newUrl.href)) return; // page will reload
       if (!ui.mounted) ui.mount();
       applyFilters();
 
@@ -171,7 +214,7 @@ export default defineContentScript({
     });
 
     if (isJobSearchPage(location.href)) {
-      if (applyRecentSort(location.href)) return; // page will reload
+      if (applyUrlModifiers(location.href)) return; // page will reload
       ui.mount();
       applyFilters();
     }

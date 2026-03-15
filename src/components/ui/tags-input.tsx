@@ -144,7 +144,14 @@ export function TagsInput({
       onItemHighlighted={(item) => {
         highlightedItemRef.current = item;
       }}
-      onValueChange={onChange}
+      onValueChange={(next, eventDetails) => {
+        if (eventDetails.reason === 'escape-key') {
+          eventDetails.cancel(); // prevents Base UI from resetting all tags
+          setQuery('');
+          return;
+        }
+        onChange(next);
+      }}
     >
       <Combobox.Chips
         ref={containerRef}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
@@ -61,6 +61,14 @@ export function PostedWithin() {
   const [inputValue, setInputValue] = useState(
     postedWithin ? String(postedWithin / UNIT_TO_MINUTES[initialUnit]) : '',
   );
+
+  useEffect(() => {
+    const derivedUnit = deriveUnit(postedWithin);
+    setUnit(derivedUnit);
+    setInputValue(
+      postedWithin ? String(postedWithin / UNIT_TO_MINUTES[derivedUnit]) : '',
+    );
+  }, [postedWithin]);
 
   function handleApply() {
     const parsed = Number(inputValue);

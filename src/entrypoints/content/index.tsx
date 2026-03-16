@@ -78,6 +78,8 @@ function syncFromUrl(url: string) {
     if (Number.isFinite(seconds) && seconds > 0) {
       useAppStore.getState().actions.setPostedWithin(Math.round(seconds / 60));
     }
+  } else if (fTPR === null) {
+    useAppStore.getState().actions.setPostedWithin(null);
   }
 }
 
@@ -98,7 +100,11 @@ export default defineContentScript({
       });
     }
 
-    syncFromUrl(location.href);
+    // wxt:locationchange event fires before location.href updates, so the
+    // store subscriber would see a stale URL and trigger an unwanted redirect
+    let currentUrl = location.href;
+
+    syncFromUrl(currentUrl);
 
     injectFilterStyles();
 
@@ -160,14 +166,14 @@ export default defineContentScript({
     };
 
     const unsubscribeStore = useAppStore.subscribe((state, prevState) => {
-      if (!isJobSearchPage(location.href)) return;
+      if (!isJobSearchPage(currentUrl)) return;
 
       if (
         state.settings.postedWithin !== prevState.settings.postedWithin ||
         state.settings.defaultToRecentSort !==
           prevState.settings.defaultToRecentSort
       ) {
-        applyUrlModifiers(location.href);
+        applyUrlModifiers(currentUrl);
         return; // page will reload
       }
 
@@ -188,21 +194,22 @@ export default defineContentScript({
     });
 
     ctx.addEventListener(window, 'wxt:locationchange', ({ newUrl }) => {
+      currentUrl = newUrl.href;
       iframeObserver?.disconnect();
       iframeObserver = null;
 
-      if (!isJobSearchPage(newUrl.href)) {
+      if (!isJobSearchPage(currentUrl)) {
         ui.remove();
         return;
       }
 
-      if (applyUrlModifiers(newUrl.href)) return; // page will reload
+      syncFromUrl(currentUrl);
       if (!ui.mounted) ui.mount();
       applyFilters();
 
       // TEMPORARY: LinkedIn renders legacy Ember search in an iframe when
       // navigating back from AI search, instead of a full reload.
-      if (isClassicSearchPage(newUrl.href)) {
+      if (isClassicSearchPage(currentUrl)) {
         ctx.setTimeout(observeInteropIframe, 250);
       }
     });

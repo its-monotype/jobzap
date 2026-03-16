@@ -4,6 +4,7 @@ import { Switch } from '@/components/ui/switch';
 import { useActions, useSettings } from '@/store';
 import { BlockedCompanies } from './blocked-companies';
 import { ExcludedKeywords } from './excluded-keywords';
+import { FilterStatus } from './filter-status';
 import { PostedWithin } from './posted-within';
 
 type SettingRowProps = {
@@ -25,13 +26,16 @@ export function Panel() {
   const actions = useActions();
 
   return (
-    <div className="w-80 rounded-lg bg-white p-4 shadow-lg">
-      <div className="flex items-center gap-2">
-        <Logo className="size-6" />
-        <span className="text-lg font-semibold">JobZap</span>
+    <div className="flex max-h-[calc(100vh-140px)] w-80 flex-col overflow-hidden rounded-lg border bg-background shadow-lg">
+      <div className="flex flex-col gap-2 border-b p-4">
+        <div className="flex items-center gap-2">
+          <Logo className="size-6" />
+          <span className="text-lg font-semibold">JobZap</span>
+        </div>
+        <FilterStatus />
       </div>
 
-      <div className="mt-4 space-y-4">
+      <div className="space-y-4 overflow-y-auto p-4">
         <PostedWithin />
 
         <SettingRow label="Default to Most Recent">
@@ -82,6 +86,17 @@ export function Panel() {
 
         <BlockedCompanies />
         <ExcludedKeywords />
+      </div>
+
+      {/* TODO: Add actual links to these */}
+      <div className="flex items-center justify-center gap-2 border-t px-4 py-3 text-xs text-muted-foreground">
+        <a href="#" className="transition-colors hover:text-foreground">
+          GitHub
+        </a>
+        <span>·</span>
+        <a href="#" className="transition-colors hover:text-foreground">
+          Report issue
+        </a>
       </div>
     </div>
   );

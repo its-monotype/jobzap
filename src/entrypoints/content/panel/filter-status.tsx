@@ -1,0 +1,30 @@
+import { cn } from '@/lib/utils';
+import { useActiveFilters, useFilterCounts } from '@/store';
+
+export function FilterStatus() {
+  const activeFilters = useActiveFilters();
+  const isFiltering = Object.values(activeFilters).some((v) => v);
+  const counts = useFilterCounts();
+  const hiddenCount = Object.values(counts).reduce((a, b) => a + b, 0);
+
+  return (
+    <div className="flex items-center gap-3 rounded-md border px-3 py-2">
+      <div
+        className={cn(
+          'size-2 rounded-full',
+          isFiltering ? 'bg-emerald-500' : 'bg-muted-foreground',
+        )}
+      />
+      <div className="flex flex-col">
+        <span className="text-sm font-medium">
+          {isFiltering ? 'Filtering' : 'Inactive'}
+        </span>
+        {isFiltering && (
+          <span className="text-xs text-muted-foreground">
+            {hiddenCount} jobs hidden
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}

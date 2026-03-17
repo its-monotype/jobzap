@@ -130,6 +130,10 @@ export const useAppStore = create<AppStore>()(
   ),
 );
 
+storage.watch<string>('sync:jobzap', () => {
+  useAppStore.persist.rehydrate();
+});
+
 export const useActions = () => useAppStore((s) => s.actions);
 export const useSettings = () => useAppStore(useShallow((s) => s.settings));
 export const useEnabledFilters = () =>

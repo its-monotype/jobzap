@@ -22,7 +22,19 @@ export function ExcludedKeywords() {
       </div>
       <TagsInput
         value={keywords}
-        onChange={actions.setExcludedKeywords}
+        onChange={(next) => {
+          const prevCount = keywords.length;
+          const isClearAll = prevCount > 1 && next.length === 0;
+
+          if (isClearAll) {
+            const confirmed = window.confirm(
+              `Clear all ${prevCount} excluded keywords?`,
+            );
+            if (!confirmed) return;
+          }
+
+          actions.setExcludedKeywords(next);
+        }}
         placeholder="Add keyword..."
       />
     </div>

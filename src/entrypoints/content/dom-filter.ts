@@ -16,11 +16,6 @@ const DISMISSED_UNDO_BTN = 'button[aria-label$=" job is dismissed, undo"]'; // p
 export const AI_LIST_SELECTOR = '[componentkey="SearchResultsMainContent"]';
 const AI_CARD_MARKER = `${DISMISS_BTN}, ${DISMISSED_UNDO_BTN}`;
 
-type CardRef = {
-  kind: 'classic' | 'ai';
-  el: HTMLElement;
-};
-
 function normalizeText(value: string | null | undefined): string {
   return value?.replace(/\s+/g, ' ').trim() ?? '';
 }
@@ -93,29 +88,30 @@ function isAiDismissed(card: HTMLElement): boolean {
   return !!card.querySelector(DISMISSED_UNDO_BTN);
 }
 
-function collectClassicCards(doc: Document): CardRef[] {
-  return Array.from(
-    doc.querySelectorAll<HTMLElement>(CLASSIC_CARD_SELECTOR),
-  ).map((el) => ({ kind: 'classic', el }));
+function collectClassicCards(doc: Document): HTMLElement[] {
+  return Array.from(doc.querySelectorAll<HTMLElement>(CLASSIC_CARD_SELECTOR));
 }
 
-function collectAiCards(doc: Document): CardRef[] {
+function collectAiCards(doc: Document): HTMLElement[] {
   const list = doc.querySelector<HTMLElement>(AI_LIST_SELECTOR);
   if (!list) return [];
 
-  return (Array.from(list.children) as HTMLElement[])
-    .filter((el) => el.tagName !== 'HR' && el.querySelector(AI_CARD_MARKER))
-    .map((el) => ({ kind: 'ai', el }));
+  return (Array.from(list.children) as HTMLElement[]).filter(
+    (el) => el.tagName !== 'HR' && el.querySelector(AI_CARD_MARKER),
+  );
 }
 
-function getCards(): CardRef[] {
+function getCards(isAiSearch: boolean): HTMLElement[] {
+  if (isAiSearch) return collectAiCards(document);
+
+  // Classic search may be rendered inside an interop iframe when navigating back from the AI search shell
   const iframeDoc = document.querySelector<HTMLIFrameElement>(
     INTEROP_IFRAME_SELECTOR,
   )?.contentDocument;
-  // Collect from interop iframe only. When present, the main document still contains the stale AI search shell after navigation
-  if (iframeDoc) return collectClassicCards(iframeDoc);
+  const iframeCards = iframeDoc ? collectClassicCards(iframeDoc) : [];
+  if (iframeCards.length) return iframeCards;
 
-  return [...collectClassicCards(document), ...collectAiCards(document)];
+  return collectClassicCards(document);
 }
 
 /** Hides the <hr> separator after each hidden card to avoid stacking dividers between visible cards. */
@@ -147,8 +143,14 @@ export function removeFilterStyles(doc: Document = document) {
 }
 
 export function applyFilters() {
-  const { activeFilters, settings, actions } = useAppStore.getState();
-  const cards = getCards();
+  const {
+    activeFilters,
+    settings,
+    actions,
+    isAiSearchPage: isAiSearch,
+  } = useAppStore.getState();
+
+  const cards = getCards(isAiSearch);
 
   const blockedCompanies = settings.blockedCompanies.map((c) =>
     c.toLowerCase(),
@@ -159,18 +161,10 @@ export function applyFilters() {
 
   const counts: Partial<Record<FilterId, number>> = {};
   const visibleCompanies = new Set<string>();
-  let aiCards = 0;
-  let classicCards = 0;
 
-  for (const card of cards) {
-    if (card.kind === 'ai') aiCards++;
-    else classicCards++;
-
-    const text = (card.el.textContent ?? '').toLowerCase();
-    const meta =
-      card.kind === 'classic'
-        ? extractClassicMeta(card.el)
-        : extractAiMeta(card.el);
+  for (const el of cards) {
+    const text = (el.textContent ?? '').toLowerCase();
+    const meta = isAiSearch ? extractAiMeta(el) : extractClassicMeta(el);
     const title = meta.title.toLowerCase();
     const company = meta.company.toLowerCase();
 
@@ -180,9 +174,7 @@ export function applyFilters() {
       applied: activeFilters.applied && text.includes('applied'),
       dismissed:
         activeFilters.dismissed &&
-        (card.kind === 'classic'
-          ? isClassicDismissed(card.el)
-          : isAiDismissed(card.el)),
+        (isAiSearch ? isAiDismissed(el) : isClassicDismissed(el)),
       companies:
         activeFilters.companies &&
         company.length > 0 &&
@@ -193,7 +185,7 @@ export function applyFilters() {
         excludedKeywords.some((k) => title.includes(k)),
     };
 
-    card.el.classList.toggle(HIDE_CLASS, Object.values(matches).some(Boolean));
+    el.classList.toggle(HIDE_CLASS, Object.values(matches).some(Boolean));
 
     for (const [id, match] of Object.entries(matches)) {
       if (match) counts[id as FilterId] = (counts[id as FilterId] ?? 0) + 1;
@@ -202,15 +194,10 @@ export function applyFilters() {
     if (meta.company) visibleCompanies.add(meta.company);
   }
 
-  normalizeAiHr();
+  if (isAiSearch) normalizeAiHr();
 
   actions.setFilterCounts(counts);
   actions.setVisibleCompanies(Array.from(visibleCompanies).sort());
 
-  console.log('applyFilters', {
-    total: cards.length,
-    aiCards,
-    classicCards,
-    ...counts,
-  });
+  console.log('applyFilters', { total: cards.length, ...counts });
 }

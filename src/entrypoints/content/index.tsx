@@ -13,21 +13,23 @@ import {
   removeFilterStyles,
 } from './dom-filter';
 
-function isJobSearchPage(url: string): boolean {
-  const { pathname, searchParams } = new URL(url);
-
-  if (pathname.startsWith('/jobs/search-results')) {
-    return searchParams.has('keywords');
-  }
-
+export function isClassicSearchPage(url: string): boolean {
+  const { pathname } = new URL(url);
   return (
-    pathname.startsWith('/jobs/search') ||
-    pathname.startsWith('/jobs/collections')
+    pathname.startsWith('/jobs/search/') ||
+    pathname.startsWith('/jobs/collections/')
   );
 }
 
-function isClassicSearchPage(url: string): boolean {
-  return new URL(url).pathname.startsWith('/jobs/search/');
+export function isAiSearchPage(url: string): boolean {
+  const { pathname, searchParams } = new URL(url);
+  return (
+    pathname.startsWith('/jobs/search-results/') && searchParams.has('keywords')
+  );
+}
+
+export function isJobSearchPage(url: string): boolean {
+  return isClassicSearchPage(url) || isAiSearchPage(url);
 }
 
 function applyPostedWithin(url: string): boolean {
@@ -70,6 +72,8 @@ function applyUrlModifiers(url: string): boolean {
 }
 
 function syncFromUrl(url: string) {
+  useAppStore.getState().actions.setIsAiSearchPage(isAiSearchPage(url));
+
   if (!isClassicSearchPage(url)) return;
 
   const parsed = new URL(url);
@@ -134,7 +138,7 @@ export default defineContentScript({
     let listObserver: MutationObserver | null = null;
 
     const debouncedApply = () => {
-      if (!isJobSearchPage(location.href)) return;
+      if (!isJobSearchPage(currentUrl)) return;
       if (timeoutId) clearTimeout(timeoutId);
       timeoutId = ctx.setTimeout(applyFilters, 200);
     };
@@ -149,6 +153,7 @@ export default defineContentScript({
       listObserver.observe(target, { childList: true, subtree: true });
     };
 
+    // When navigating from AI search back to classic search, LinkedIn renders the classic legacy Ember search inside an interop iframe
     const observeInteropIframe = () => {
       if (iframeObserver) return;
       const iframe = document.querySelector<HTMLIFrameElement>(
@@ -162,7 +167,7 @@ export default defineContentScript({
         iframe.contentDocument.querySelector(CLASSIC_LIST_SELECTOR) ??
         iframe.contentDocument.body;
 
-      // When iframe is present, the main document's list belongs to the stale AI search shell
+      // When the iframe is present on classic search page, the main document belongs to the stale AI search shell
       listObserver?.disconnect();
       listObserver = null;
 
@@ -225,10 +230,9 @@ export default defineContentScript({
       applyFilters();
       observeJobList();
 
-      // TEMPORARY: LinkedIn renders legacy Ember search in an iframe when
-      // navigating back from AI search, instead of a full reload.
+      // Classic search page may render inside an iframe when navigating back from AI search
       if (isClassicSearchPage(currentUrl)) {
-        ctx.setTimeout(observeInteropIframe, 250);
+        observeInteropIframe();
       }
     });
 
@@ -250,8 +254,8 @@ export default defineContentScript({
       }
     });
 
-    if (isJobSearchPage(location.href)) {
-      if (applyUrlModifiers(location.href)) return; // page will reload
+    if (isJobSearchPage(currentUrl)) {
+      if (applyUrlModifiers(currentUrl)) return; // page will reload
       ui.mount();
       applyFilters();
     }

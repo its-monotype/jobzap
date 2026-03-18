@@ -21,6 +21,7 @@ interface AppStore {
   activeFilters: Record<FilterId, boolean>;
   filterCounts: Partial<Record<FilterId, number>>;
   visibleCompanies: string[];
+  isAiSearchPage: boolean;
   actions: {
     setFilterEnabled: (id: FilterId, enabled: boolean) => void;
     setFilterActive: (id: FilterId, active: boolean) => void;
@@ -35,6 +36,7 @@ interface AppStore {
     setFilterCounts: (counts: Partial<Record<FilterId, number>>) => void;
 
     setVisibleCompanies: (companies: string[]) => void;
+    setIsAiSearchPage: (value: boolean) => void;
   };
 }
 
@@ -74,6 +76,7 @@ export const useAppStore = create<AppStore>()(
       },
       filterCounts: {},
       visibleCompanies: [],
+      isAiSearchPage: false,
       actions: {
         setFilterEnabled: (id, enabled) =>
           set((s) => ({
@@ -117,6 +120,7 @@ export const useAppStore = create<AppStore>()(
         setFilterCounts: (counts) => set({ filterCounts: counts }),
 
         setVisibleCompanies: (visibleCompanies) => set({ visibleCompanies }),
+        setIsAiSearchPage: (isAiSearchPage) => set({ isAiSearchPage }),
       },
     }),
     {
@@ -144,3 +148,4 @@ export const useFilterCounts = () =>
   useAppStore(useShallow((s) => s.filterCounts));
 export const useVisibleCompanies = () =>
   useAppStore(useShallow((s) => s.visibleCompanies));
+export const useIsAiSearchPage = () => useAppStore((s) => s.isAiSearchPage);

@@ -69,6 +69,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      vite-plugin-remove-console:
+        specifier: ^2.2.0
+        version: 2.2.0
       wxt:
         specifier: ^0.20.18
         version: 0.20.18(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1)(rollup@4.59.0)
@@ -2958,6 +2961,9 @@ packages:
     resolution: {integrity: sha512-8f20COPYJujc3OKPX6OuyBy3ZIv2det4eRRU4GY1y2MjbeGSUmPjedxg1b72KnTagCofwvZ65ThzjxDW2AtQFQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
+
+  vite-plugin-remove-console@2.2.0:
+    resolution: {integrity: sha512-qgjh5pz75MdE9Kzs8J0kBwaCfifHV0ezRbB9rpGsIOxam+ilcGV7WOk91vFJXquzRmiKrFh3Hxlh0JJWAmXTbQ==}
 
   vite@7.3.1:
     resolution: {integrity: sha512-w+N7Hifpc3gRjZ63vYBXA56dvvRlNWRczTdmCBBa+CotUzAPf5b7YMdMR/8CQoeYE5LX3W4wj6RYTgonm1b9DA==}
@@ -5874,6 +5880,8 @@ snapshots:
       - terser
       - tsx
       - yaml
+
+  vite-plugin-remove-console@2.2.0: {}
 
   vite@7.3.1(@types/node@25.5.0)(jiti@2.6.1)(lightningcss@1.31.1):
     dependencies:

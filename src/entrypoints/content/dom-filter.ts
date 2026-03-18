@@ -209,7 +209,7 @@ export function applyFilters() {
   actions.setFilterCounts(counts);
   actions.setVisibleCompanies(Array.from(visibleCompanies).sort());
 
-  log('applyFilters', {
+  console.log('applyFilters', {
     total: cards.length,
     aiCards,
     classicCards,

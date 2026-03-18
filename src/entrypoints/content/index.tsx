@@ -89,8 +89,6 @@ export default defineContentScript({
   cssInjectionMode: 'ui',
 
   async main(ctx) {
-    log('content script running', location.href);
-
     if (!useAppStore.persist.hasHydrated()) {
       await new Promise<void>((resolve) => {
         const unsubscribe = useAppStore.persist.onFinishHydration(() => {

@@ -40,6 +40,7 @@
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "typescript": "^5.9.3",
+    "vite-plugin-remove-console": "^2.2.0",
     "wxt": "^0.20.18"
   }
 }

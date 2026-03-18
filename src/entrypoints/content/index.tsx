@@ -5,7 +5,9 @@ import { useAppStore } from '@/store';
 import ReactDOM from 'react-dom/client';
 import { App } from './app';
 import {
+  AI_LIST_SELECTOR,
   applyFilters,
+  CLASSIC_LIST_SELECTOR,
   injectFilterStyles,
   INTEROP_IFRAME_SELECTOR,
   removeFilterStyles,
@@ -129,11 +131,22 @@ export default defineContentScript({
 
     let timeoutId: number | undefined;
     let iframeObserver: MutationObserver | null = null;
+    let listObserver: MutationObserver | null = null;
 
     const debouncedApply = () => {
       if (!isJobSearchPage(location.href)) return;
       if (timeoutId) clearTimeout(timeoutId);
       timeoutId = ctx.setTimeout(applyFilters, 200);
+    };
+
+    const observeJobList = () => {
+      listObserver?.disconnect();
+      const target =
+        document.querySelector(CLASSIC_LIST_SELECTOR) ??
+        document.querySelector(AI_LIST_SELECTOR) ??
+        document.body;
+      listObserver = new MutationObserver(debouncedApply);
+      listObserver.observe(target, { childList: true, subtree: true });
     };
 
     const observeInteropIframe = () => {
@@ -145,8 +158,16 @@ export default defineContentScript({
 
       injectFilterStyles(iframe.contentDocument);
 
+      const iframeListTarget =
+        iframe.contentDocument.querySelector(CLASSIC_LIST_SELECTOR) ??
+        iframe.contentDocument.body;
+
+      // When iframe is present, the main document's list belongs to the stale AI search shell
+      listObserver?.disconnect();
+      listObserver = null;
+
       iframeObserver = new MutationObserver(debouncedApply);
-      iframeObserver.observe(iframe.contentDocument.body, {
+      iframeObserver.observe(iframeListTarget, {
         childList: true,
         subtree: true,
       });
@@ -185,11 +206,7 @@ export default defineContentScript({
       }
     });
 
-    const bodyObserver = new MutationObserver(debouncedApply);
-    bodyObserver.observe(document.body, {
-      childList: true,
-      subtree: true,
-    });
+    observeJobList();
 
     ctx.addEventListener(window, 'wxt:locationchange', ({ newUrl }) => {
       currentUrl = newUrl.href;
@@ -197,6 +214,8 @@ export default defineContentScript({
       iframeObserver = null;
 
       if (!isJobSearchPage(currentUrl)) {
+        listObserver?.disconnect();
+        listObserver = null;
         ui.remove();
         return;
       }
@@ -204,6 +223,7 @@ export default defineContentScript({
       syncFromUrl(currentUrl);
       if (!ui.mounted) ui.mount();
       applyFilters();
+      observeJobList();
 
       // TEMPORARY: LinkedIn renders legacy Ember search in an iframe when
       // navigating back from AI search, instead of a full reload.
@@ -215,7 +235,8 @@ export default defineContentScript({
     ctx.onInvalidated(() => {
       ui.remove();
       unsubscribeStore();
-      bodyObserver.disconnect();
+      listObserver?.disconnect();
+      listObserver = null;
       iframeObserver?.disconnect();
       iframeObserver = null;
 

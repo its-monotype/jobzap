@@ -7,12 +7,13 @@ const STYLE_ID = 'jz-style';
 // iframe LinkedIn uses to run legacy Ember search inside the React shell
 export const INTEROP_IFRAME_SELECTOR = 'iframe[data-testid="interop-iframe"]';
 
+export const CLASSIC_LIST_SELECTOR = '.scaffold-layout__list';
 const CLASSIC_CARD_SELECTOR = 'li[data-occludable-job-id]';
 
 const DISMISS_BTN = 'button[aria-label^="Dismiss "][aria-label$=" job"]';
 const DISMISSED_UNDO_BTN = 'button[aria-label$=" job is dismissed, undo"]'; // present on dismissed cards of both types
 
-const AI_LIST_SELECTOR = '[componentkey="SearchResultsMainContent"]';
+export const AI_LIST_SELECTOR = '[componentkey="SearchResultsMainContent"]';
 const AI_CARD_MARKER = `${DISMISS_BTN}, ${DISMISSED_UNDO_BTN}`;
 
 type CardRef = {
@@ -108,16 +109,13 @@ function collectAiCards(doc: Document): CardRef[] {
 }
 
 function getCards(): CardRef[] {
-  const docs: Document[] = [document];
   const iframeDoc = document.querySelector<HTMLIFrameElement>(
     INTEROP_IFRAME_SELECTOR,
   )?.contentDocument;
-  if (iframeDoc) docs.push(iframeDoc);
+  // Collect from interop iframe only. When present, the main document still contains the stale AI search shell after navigation
+  if (iframeDoc) return collectClassicCards(iframeDoc);
 
-  return docs.flatMap((doc) => [
-    ...collectClassicCards(doc),
-    ...collectAiCards(doc),
-  ]);
+  return [...collectClassicCards(document), ...collectAiCards(document)];
 }
 
 /** Hides the <hr> separator after each hidden card to avoid stacking dividers between visible cards. */

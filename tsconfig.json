@@ -9,7 +9,6 @@
     "noUncheckedSideEffectImports": true,
     "erasableSyntaxOnly": true,
     "noImplicitOverride": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }

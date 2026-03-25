@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useActions, useSettings } from '@/store';
+import { useActions, useAppStore } from '@/store';
 
 type Unit = 'minutes' | 'hours' | 'days';
 
@@ -52,34 +52,40 @@ function deriveUnit(minutes: number | null): Unit {
   return 'minutes';
 }
 
+function deriveInputValue(minutes: number | null, unit: Unit): string {
+  if (!minutes) return '';
+  return String(minutes / UNIT_TO_MINUTES[unit]);
+}
+
 export function PostedWithin() {
-  const { postedWithin } = useSettings();
+  const postedWithin = useAppStore((state) => state.settings.postedWithin);
   const { setPostedWithin } = useActions();
 
-  const initialUnit = deriveUnit(postedWithin);
-  const [unit, setUnit] = useState<Unit>(initialUnit);
-  const [inputValue, setInputValue] = useState(
-    postedWithin ? String(postedWithin / UNIT_TO_MINUTES[initialUnit]) : '',
-  );
+  const [unit, setUnit] = useState<Unit>(() => deriveUnit(postedWithin));
+  const [inputValue, setInputValue] = useState<string>(() => {
+    const initialUnit = deriveUnit(postedWithin);
+    return deriveInputValue(postedWithin, initialUnit);
+  });
 
   useEffect(() => {
-    const derivedUnit = deriveUnit(postedWithin);
-    setUnit(derivedUnit);
-    setInputValue(
-      postedWithin ? String(postedWithin / UNIT_TO_MINUTES[derivedUnit]) : '',
-    );
+    const nextUnit = deriveUnit(postedWithin);
+
+    // Sync local draft with external Zustand state (postedWithin is the source of truth)
+    // eslint-disable-next-line @eslint-react/set-state-in-effect
+    setUnit(nextUnit);
+    // eslint-disable-next-line @eslint-react/set-state-in-effect
+    setInputValue(deriveInputValue(postedWithin, nextUnit));
   }, [postedWithin]);
 
   function handleApply() {
     const parsed = Number(inputValue);
     if (!inputValue || !Number.isFinite(parsed) || parsed <= 0) return;
+
     setPostedWithin(Math.round(parsed * UNIT_TO_MINUTES[unit]));
   }
 
   function handleClear() {
     setPostedWithin(null);
-    setInputValue('');
-    setUnit('minutes');
   }
 
   function handleUnitChange(value: Unit | null) {
@@ -88,9 +94,7 @@ export function PostedWithin() {
   }
 
   function handlePresetClick(value: number, presetUnit: Unit) {
-    setUnit(presetUnit);
     setPostedWithin(value * UNIT_TO_MINUTES[presetUnit]);
-    setInputValue(String(value));
   }
 
   return (

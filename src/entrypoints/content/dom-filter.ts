@@ -1,4 +1,4 @@
-import { FilterId } from '@/constants';
+import type { FilterId } from '@/constants';
 import { useAppStore } from '@/store';
 
 const HIDE_CLASS = 'jz-hidden';

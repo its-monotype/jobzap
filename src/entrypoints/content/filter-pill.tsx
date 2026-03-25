@@ -1,12 +1,12 @@
 import { cn } from '@/lib/utils';
 
-type FilterPillProps = {
+interface FilterPillProps {
   label: string;
   color: string;
   count: number;
   active: boolean;
   onClick: () => void;
-};
+}
 
 export function FilterPill({
   label,

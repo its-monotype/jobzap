@@ -1,6 +1,6 @@
-import * as React from 'react';
+import { createContext, use } from 'react';
 
-const PortalContainerContext = React.createContext<HTMLElement | null>(null);
+const PortalContainerContext = createContext<HTMLElement | null>(null);
 
 export function PortalContainerProvider({
   container,
@@ -17,5 +17,5 @@ export function PortalContainerProvider({
 }
 
 export function usePortalContainer() {
-  return React.useContext(PortalContainerContext);
+  return use(PortalContainerContext);
 }

@@ -1,0 +1,16 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: prettier
+      run: pnpm exec prettier --ignore-unknown --write {staged_files}
+      stage_fixed: true
+
+    - name: eslint
+      glob: '*.{ts,tsx}'
+      run: pnpm exec eslint --fix {staged_files}
+      stage_fixed: true
+
+pre-push:
+  jobs:
+    - name: typecheck
+      run: pnpm compile

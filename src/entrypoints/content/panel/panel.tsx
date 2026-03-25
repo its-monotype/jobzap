@@ -7,10 +7,10 @@ import { ExcludedKeywords } from './excluded-keywords';
 import { FilterStatus } from './filter-status';
 import { PostedWithin } from './posted-within';
 
-type SettingRowProps = {
+interface SettingRowProps {
   label: string;
   children: React.ReactNode;
-};
+}
 
 function SettingRow({ label, children }: SettingRowProps) {
   return (

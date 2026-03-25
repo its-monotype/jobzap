@@ -1,5 +1,6 @@
 import '@/globals.css';
 
+import { createShadowRootUi, defineContentScript } from '#imports';
 import { PortalContainerProvider } from '@/contexts/portal-container';
 import { useAppStore } from '@/store';
 import ReactDOM from 'react-dom/client';

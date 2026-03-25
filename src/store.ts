@@ -6,7 +6,7 @@ import {
   type StateStorage,
 } from 'zustand/middleware';
 import { useShallow } from 'zustand/shallow';
-import { FilterId } from './constants';
+import type { FilterId } from './constants';
 
 interface Settings {
   enabledFilters: Record<FilterId, boolean>;
@@ -135,7 +135,7 @@ export const useAppStore = create<AppStore>()(
 );
 
 storage.watch<string>('sync:jobzap', () => {
-  useAppStore.persist.rehydrate();
+  void useAppStore.persist.rehydrate();
 });
 
 export const useActions = () => useAppStore((s) => s.actions);

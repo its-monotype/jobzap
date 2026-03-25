@@ -1,5 +1,4 @@
 import { Combobox as ComboboxPrimitive } from '@base-ui/react';
-import * as React from 'react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -11,6 +10,7 @@ import {
 import { usePortalContainer } from '@/contexts/portal-container';
 import { cn } from '@/lib/utils';
 import { CheckIcon, ChevronDownIcon, XIcon } from 'lucide-react';
+import { useRef } from 'react';
 
 const Combobox = ComboboxPrimitive.Root;
 
@@ -278,7 +278,7 @@ function ComboboxChipsInput({
 }
 
 function useComboboxAnchor() {
-  return React.useRef<HTMLDivElement | null>(null);
+  return useRef<HTMLDivElement | null>(null);
 }
 
 export {

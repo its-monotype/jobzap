@@ -1,0 +1,6 @@
+allowBuilds:
+  esbuild: true
+  lefthook: true
+  msw: false
+  sharp: true
+  spawn-sync: false

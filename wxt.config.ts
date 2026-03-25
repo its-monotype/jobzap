@@ -7,6 +7,7 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
   srcDir: 'src',
   modules: ['@wxt-dev/module-react', '@wxt-dev/auto-icons'],
+  imports: false,
   manifest: {
     name: 'JobZap',
     description: 'LinkedIn job filter',

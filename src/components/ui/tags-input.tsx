@@ -2,9 +2,9 @@ import { usePortalContainer } from '@/contexts/portal-container';
 import { cn } from '@/lib/utils';
 import { Combobox } from '@base-ui/react/combobox';
 import { CheckIcon, XIcon } from 'lucide-react';
-import * as React from 'react';
+import { useMemo, useRef, useState } from 'react';
 
-export type TagsInputProps = {
+export interface TagsInputProps {
   value: string[];
   onChange: (next: string[]) => void;
   suggestions?: string[];
@@ -14,7 +14,7 @@ export type TagsInputProps = {
   allowDuplicates?: boolean;
   maxTags?: number;
   className?: string;
-};
+}
 
 function cleanValue(value: string) {
   return value.trim().replace(/\s+/g, ' ');
@@ -42,21 +42,18 @@ export function TagsInput({
   maxTags,
   className,
 }: TagsInputProps) {
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const popupRef = React.useRef<HTMLDivElement>(null);
-  const inputRef = React.useRef<HTMLInputElement>(null);
-  const highlightedItemRef = React.useRef<string | undefined>(undefined);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const popupRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const highlightedItemRef = useRef<string | undefined>(undefined);
   const portalContainer = usePortalContainer();
 
-  const [query, setQuery] = React.useState('');
-  const [isComposing, setIsComposing] = React.useState(false);
+  const [query, setQuery] = useState('');
+  const [isComposing, setIsComposing] = useState(false);
 
-  const selectedSet = React.useMemo(
-    () => new Set(value.map(normalize)),
-    [value],
-  );
+  const selectedSet = useMemo(() => new Set(value.map(normalize)), [value]);
 
-  const options = React.useMemo(() => {
+  const options = useMemo(() => {
     if (allowDuplicates) return suggestions;
     return suggestions.filter((item) => !selectedSet.has(normalize(item)));
   }, [allowDuplicates, suggestions, selectedSet]);
@@ -173,6 +170,7 @@ export function TagsInput({
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
               {selected.map((tag, index) => (
                 <Combobox.Chip
+                  // eslint-disable-next-line @eslint-react/no-array-index-key
                   key={`${tag}:${index}`}
                   className="flex h-5.5 cursor-default items-center gap-1 rounded-sm bg-muted pl-1.5 text-xs font-medium whitespace-nowrap text-foreground outline-none data-highlighted:bg-accent data-highlighted:text-accent-foreground"
                 >
@@ -227,7 +225,7 @@ export function TagsInput({
               )}
             >
               <Combobox.List className="no-scrollbar max-h-[min(18rem,var(--available-height))] scroll-py-1 overflow-y-auto overscroll-contain p-1 outline-none">
-                {(item) => (
+                {(item: string) => (
                   <Combobox.Item
                     key={item}
                     value={item}

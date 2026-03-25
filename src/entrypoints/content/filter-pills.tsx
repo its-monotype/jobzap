@@ -1,4 +1,4 @@
-import { FILTERS, FilterId } from '@/constants';
+import { FILTERS, type FilterId } from '@/constants';
 import {
   useActions,
   useActiveFilters,

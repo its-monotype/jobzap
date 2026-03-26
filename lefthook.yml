@@ -13,4 +13,4 @@ pre-commit:
 pre-push:
   jobs:
     - name: typecheck
-      run: pnpm compile
+      run: pnpm typecheck

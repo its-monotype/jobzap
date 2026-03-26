@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        default: false
+        type: boolean
+        description: Skip submission and perform a dry run
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  release-please:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@v4
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: release-please
+    if: |
+      always() &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        needs.release-please.outputs.release_created == 'true'
+      )
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build and ZIP
+        run: pnpm run zip
+
+      - name: Upload ZIP to GitHub Release
+        if: needs.release-please.outputs.release_created == 'true'
+        run: gh release upload "${{ needs.release-please.outputs.tag_name }}" .output/*-chrome.zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Submit
+        run: pnpm exec wxt submit --chrome-zip .output/*-chrome.zip
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}

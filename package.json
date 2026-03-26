@@ -12,7 +12,7 @@
     "build:firefox": "wxt build -b firefox",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
-    "compile": "tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
@@ -50,5 +50,9 @@
     "typescript-eslint": "^8.57.2",
     "vite-plugin-remove-console": "^2.2.0",
     "wxt": "^0.20.20"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=24"
   }
 }

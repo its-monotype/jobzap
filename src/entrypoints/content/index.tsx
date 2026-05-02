@@ -1,6 +1,6 @@
 import '@/globals.css';
 
-import { createShadowRootUi, defineContentScript } from '#imports';
+import { browser, createShadowRootUi, defineContentScript } from '#imports';
 import { PortalContainerProvider } from '@/contexts/portal-container';
 import { useAppStore } from '@/store';
 import ReactDOM from 'react-dom/client';
@@ -260,5 +260,13 @@ export default defineContentScript({
       ui.mount();
       applyFilters();
     }
+
+    browser.runtime.onMessage.addListener(
+      (message: Record<string, unknown>) => {
+        if (message.type === 'TOGGLE_PANEL') {
+          useAppStore.getState().actions.togglePanelOpen();
+        }
+      },
+    );
   },
 });

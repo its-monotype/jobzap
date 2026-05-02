@@ -11,8 +11,10 @@ export default defineConfig({
   manifest: {
     name: 'JobZap',
     description: 'LinkedIn job filter',
-    permissions: ['storage', 'activeTab'],
+    permissions: ['storage'],
     host_permissions: ['https://www.linkedin.com/*'],
+    homepage_url: 'https://jobzap.app',
+    action: {},
   },
   autoIcons: {
     baseIconPath: 'assets/icon.svg',

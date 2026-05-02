@@ -88,13 +88,20 @@ export function Panel() {
         <ExcludedKeywords />
       </div>
 
-      {/* TODO: Add actual links to these */}
       <div className="flex items-center justify-center gap-2 border-t px-4 py-3 text-xs text-muted-foreground">
-        <a href="#" className="transition-colors hover:text-foreground">
+        <a
+          href="https://github.com/its-monotype/jobzap"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="transition-colors hover:text-foreground"
+        >
           GitHub
         </a>
         <span>·</span>
-        <a href="#" className="transition-colors hover:text-foreground">
+        <a
+          href="mailto:hello@jobzap.app"
+          className="transition-colors hover:text-foreground"
+        >
           Report issue
         </a>
       </div>

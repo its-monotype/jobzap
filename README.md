@@ -1,12 +1,31 @@
-# JobZap
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset=".github/assets/logo-light.svg" />
+    <source media="(prefers-color-scheme: light)" srcset=".github/assets/logo-dark.svg" />
+    <img alt="JobZap" src=".github/assets/logo-dark.svg" height="52" />
+  </picture>
+</p>
 
-Browser extension that cuts the noise from your LinkedIn job search.
+<p align="center">Cut the noise from LinkedIn job search.</p>
+<p align="center">Chrome extension that filters out irrelevant LinkedIn jobs and keeps your search focused.</p>
 
-> 🚧 Work in progress, first version coming soon.
+<p align="center">
+  <!-- <a href="https://chromewebstore.google.com/detail/YOUR_ID"><img src="https://img.shields.io/chrome-web-store/v/YOUR_ID?style=flat&labelColor=000000&color=000000&label=chrome%20web%20store" alt="chrome web store" /></a> -->
+  <a href="../../releases"><img src="https://img.shields.io/github/v/release/its-monotype/jobzap?style=flat&labelColor=000000&color=000000&label=release" alt="release" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-000000?style=flat&labelColor=000000" alt="license" /></a>
+</p>
+
+<p align="center">
+ <a href="https://jobzap.app">
+  <img src=".github/assets/screenshot.png" alt="JobZap showcase" width="600" />
+  </a>
+</p>
+
+---
 
 ## Features
 
-### Filters
+### Hide irrelevant jobs
 
 Hide jobs matching any combination of:
 
@@ -17,23 +36,47 @@ Hide jobs matching any combination of:
 - Specific companies
 - Custom keywords
 
-### Search controls
+### Control search results
 
-- Default to most recent sort automatically
-- Custom date posted filter (e.g. last 10 days)
+- Default to most recent sort
+- Filter by any date range (e.g. last 3 days)
 
-## Roadmap
+### Real-time feedback
 
-- [x] Core filtering content script
-- [x] Floating filter pills (count hidden jobs, click to toggle)
-- [x] Settings panel
-- [x] Settings persistence
-- [x] Filter by company name
-- [x] Filter by keywords
-- [x] Default to most recent sort
-- [x] Custom date posted filter
-- [ ] Chrome Web Store release
+- Floating pills show how many jobs are hidden
+- Toggle filters on/off instantly while browsing
+
+## Installation
+
+Chrome Web Store release coming soon.
+
+<!-- **[Install from Chrome Web Store](https://chromewebstore.google.com/detail/YOUR_ID)** -->
+
+<!-- <details>
+<summary>Manual install</summary>
+
+1. Download the latest release from [Releases](../../releases)
+2. Unzip the file
+3. Open `chrome://extensions/`
+4. Enable **Developer mode**
+5. Click **Load unpacked** and select the unzipped folder
+
+</details> -->
+
+<details>
+<summary>Build from source</summary>
+
+```bash
+git clone https://github.com/its-monotype/jobzap.git
+cd jobzap
+pnpm install
+pnpm build
+```
+
+Then load `.output/chrome-mv3` in `chrome://extensions/` using **Load unpacked**.
+
+</details>
 
 ## License
 
-AGPL-3.0
+[AGPL-3.0](./LICENSE)

@@ -225,6 +225,7 @@ export default defineContentScript({
       }
 
       syncFromUrl(currentUrl);
+      if (applyUrlModifiers(currentUrl)) return; // page will reload
       if (!ui.mounted) ui.mount();
       applyFilters();
       observeJobList();

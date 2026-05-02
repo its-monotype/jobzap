@@ -20,7 +20,7 @@ export function FilterStatus() {
         />
         <div className="flex flex-col">
           <span className="text-sm font-medium">
-            {isFiltering ? 'Filtering' : 'Inactive'}
+            {isFiltering ? 'Filters active' : 'Filters inactive'}
           </span>
 
           {isFiltering && (

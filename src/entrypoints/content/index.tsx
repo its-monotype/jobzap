@@ -91,7 +91,7 @@ function syncFromUrl(url: string) {
 }
 
 export default defineContentScript({
-  matches: ['https://www.linkedin.com/jobs/*'],
+  matches: ['https://www.linkedin.com/*'],
   runAt: 'document_idle',
   cssInjectionMode: 'ui',
 
@@ -212,8 +212,6 @@ export default defineContentScript({
       }
     });
 
-    observeJobList();
-
     ctx.addEventListener(window, 'wxt:locationchange', ({ newUrl }) => {
       currentUrl = newUrl.href;
       iframeObserver?.disconnect();
@@ -255,12 +253,6 @@ export default defineContentScript({
       }
     });
 
-    if (isJobSearchPage(currentUrl)) {
-      if (applyUrlModifiers(currentUrl)) return; // page will reload
-      ui.mount();
-      applyFilters();
-    }
-
     browser.runtime.onMessage.addListener(
       (message: Record<string, unknown>) => {
         if (message.type === 'TOGGLE_PANEL') {
@@ -268,5 +260,12 @@ export default defineContentScript({
         }
       },
     );
+
+    if (isJobSearchPage(currentUrl)) {
+      if (applyUrlModifiers(currentUrl)) return; // page will reload
+      ui.mount();
+      applyFilters();
+      observeJobList();
+    }
   },
 });

@@ -10,7 +10,7 @@ export function FilterStatus() {
   const isAiSearchPage = useIsAiSearchPage();
 
   return (
-    <div className="space-y-2 rounded-md border px-3 py-2">
+    <div className="space-y-2 rounded-lg border px-3 py-2">
       <div className="flex items-center gap-3">
         <div
           className={cn(

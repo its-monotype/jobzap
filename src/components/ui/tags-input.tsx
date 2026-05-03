@@ -42,8 +42,6 @@ export function TagsInput({
   maxTags,
   className,
 }: TagsInputProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const popupRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const highlightedItemRef = useRef<string | undefined>(undefined);
   const portalContainer = usePortalContainer();
@@ -150,13 +148,11 @@ export function TagsInput({
         onChange(next);
       }}
     >
-      <Combobox.Chips
-        ref={containerRef}
+      <Combobox.InputGroup
         aria-invalid={invalid || undefined}
         data-disabled={disabled || undefined}
-        // TODO: add cursor-text when https://github.com/mui/base-ui/issues/4289 is resolved
         className={cn(
-          'flex min-h-9 items-start gap-1.5 rounded-md border border-input',
+          'flex min-h-9 cursor-text items-start gap-1.5 rounded-md border border-input',
           'bg-transparent bg-clip-padding px-1.5 py-1.5 text-sm shadow-xs transition-[color,box-shadow]',
           'focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50',
           'has-aria-invalid:border-destructive has-aria-invalid:ring-3 has-aria-invalid:ring-destructive/20',
@@ -165,37 +161,39 @@ export function TagsInput({
           className,
         )}
       >
-        <Combobox.Value>
-          {(selected: string[]) => (
-            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
-              {selected.map((tag, index) => (
-                <Combobox.Chip
-                  // eslint-disable-next-line @eslint-react/no-array-index-key
-                  key={`${tag}:${index}`}
-                  className="flex h-5.5 cursor-default items-center gap-1 rounded-sm bg-muted pl-1.5 text-xs font-medium whitespace-nowrap text-foreground outline-none data-highlighted:bg-accent data-highlighted:text-accent-foreground"
-                >
-                  <span className="max-w-48 truncate">{tag}</span>
-                  <Combobox.ChipRemove
-                    aria-label={`Remove ${tag}`}
-                    className="flex size-4 items-center justify-center rounded-sm opacity-50 hover:opacity-100 focus:outline-none focus-visible:ring-1 focus-visible:ring-ring/50"
+        <Combobox.Chips className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+          <Combobox.Value>
+            {(selected: string[]) => (
+              <>
+                {selected.map((tag, index) => (
+                  <Combobox.Chip
+                    // eslint-disable-next-line @eslint-react/no-array-index-key
+                    key={`${tag}:${index}`}
+                    className="flex h-5.5 cursor-default items-center gap-1 rounded-sm bg-muted px-1.5 text-xs font-medium whitespace-nowrap text-foreground"
                   >
-                    <XIcon className="size-3" />
-                  </Combobox.ChipRemove>
-                </Combobox.Chip>
-              ))}
+                    <span className="max-w-48 truncate">{tag}</span>
+                    <Combobox.ChipRemove
+                      aria-label={`Remove ${tag}`}
+                      className="flex size-4 items-center justify-center rounded-sm opacity-50 hover:opacity-100"
+                    >
+                      <XIcon className="size-3" />
+                    </Combobox.ChipRemove>
+                  </Combobox.Chip>
+                ))}
 
-              <Combobox.Input
-                ref={inputRef}
-                placeholder={placeholder}
-                className="h-5.5 min-w-16 flex-1 bg-transparent pl-2 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
-                onCompositionStart={() => setIsComposing(true)}
-                onCompositionEnd={() => setIsComposing(false)}
-                onKeyDown={handleKeyDown}
-                onPaste={handlePaste}
-              />
-            </div>
-          )}
-        </Combobox.Value>
+                <Combobox.Input
+                  ref={inputRef}
+                  placeholder={placeholder}
+                  className="h-5.5 min-w-16 flex-1 bg-transparent pl-2 outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
+                  onCompositionStart={() => setIsComposing(true)}
+                  onCompositionEnd={() => setIsComposing(false)}
+                  onKeyDown={handleKeyDown}
+                  onPaste={handlePaste}
+                />
+              </>
+            )}
+          </Combobox.Value>
+        </Combobox.Chips>
 
         <Combobox.Clear
           aria-label="Clear all"
@@ -203,17 +201,15 @@ export function TagsInput({
         >
           <XIcon className="size-3.5" />
         </Combobox.Clear>
-      </Combobox.Chips>
+      </Combobox.InputGroup>
 
       {options.length > 0 && (
         <Combobox.Portal container={portalContainer}>
           <Combobox.Positioner
-            anchor={containerRef}
             sideOffset={6}
-            className="isolate z-50 outline-hidden"
+            className="isolate z-50 outline-none"
           >
             <Combobox.Popup
-              ref={popupRef}
               className={cn(
                 'max-h-(--available-height) w-(--anchor-width) max-w-(--available-width) overflow-hidden rounded-md',
                 'bg-popover text-popover-foreground shadow-md ring-1 ring-foreground/10',
@@ -231,7 +227,7 @@ export function TagsInput({
                     value={item}
                     className={cn(
                       'relative flex w-full cursor-default items-center gap-2 select-none',
-                      'rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden',
+                      'rounded-sm py-1.5 pr-8 pl-2 text-sm outline-none',
                       'data-highlighted:bg-accent data-highlighted:text-accent-foreground',
                       'data-disabled:pointer-events-none data-disabled:opacity-50',
                     )}

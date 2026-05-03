@@ -28,7 +28,7 @@ export function Panel() {
   return (
     <div className="flex max-h-[calc(100vh-140px)] w-80 flex-col overflow-hidden rounded-lg border bg-background shadow-lg">
       <div className="flex flex-col gap-2 border-b p-4">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <Logo className="size-6" />
           <span className="text-lg font-semibold">JobZap</span>
         </div>

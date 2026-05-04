@@ -9,8 +9,9 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react', '@wxt-dev/auto-icons'],
   imports: false,
   manifest: {
-    name: 'JobZap',
-    description: 'LinkedIn job filter',
+    name: 'JobZap: LinkedIn Job Search Filter',
+    description:
+      'Filter irrelevant LinkedIn jobs and keep your search focused.',
     permissions: ['storage'],
     host_permissions: ['https://www.linkedin.com/*'],
     homepage_url: 'https://jobzap.app',

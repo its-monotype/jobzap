@@ -10,7 +10,7 @@
 <p align="center">Chrome extension that filters out irrelevant LinkedIn jobs and keeps your search focused.</p>
 
 <p align="center">
-  <!-- <a href="https://chromewebstore.google.com/detail/YOUR_ID"><img src="https://img.shields.io/chrome-web-store/v/YOUR_ID?style=flat&labelColor=000000&color=000000&label=chrome%20web%20store" alt="chrome web store" /></a> -->
+  <a href="https://chromewebstore.google.com/detail/hbegbmijckoknpbcdmglobgegmeoinib"><img src="https://img.shields.io/chrome-web-store/v/hbegbmijckoknpbcdmglobgegmeoinib?style=flat&labelColor=000000&color=000000&label=chrome%20web%20store" alt="chrome web store" /></a>
   <a href="../../releases"><img src="https://img.shields.io/github/v/release/its-monotype/jobzap?style=flat&labelColor=000000&color=000000&label=release" alt="release" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-AGPL--3.0-000000?style=flat&labelColor=000000" alt="license" /></a>
 </p>
@@ -48,11 +48,9 @@ Hide jobs matching any combination of:
 
 ## Installation
 
-Chrome Web Store release coming soon.
+**[Install from Chrome Web Store](https://chromewebstore.google.com/detail/hbegbmijckoknpbcdmglobgegmeoinib)**
 
-<!-- **[Install from Chrome Web Store](https://chromewebstore.google.com/detail/YOUR_ID)** -->
-
-<!-- <details>
+<details>
 <summary>Manual install</summary>
 
 1. Download the latest release from [Releases](../../releases)
@@ -61,7 +59,7 @@ Chrome Web Store release coming soon.
 4. Enable **Developer mode**
 5. Click **Load unpacked** and select the unzipped folder
 
-</details> -->
+</details>
 
 <details>
 <summary>Build from source</summary>

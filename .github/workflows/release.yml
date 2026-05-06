@@ -61,7 +61,7 @@ jobs:
 
       - name: Upload ZIP to GitHub Release
         if: needs.release-please.outputs.release_created == 'true'
-        run: gh release upload "${{ needs.release-please.outputs.tag_name }}" .output/*-chrome.zip
+        run: gh release upload "${{ needs.release-please.outputs.tag_name }}" .output/*-chrome.zip --clobber
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -73,3 +73,4 @@ jobs:
           CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
           CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
           CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
+          CHROME_SKIP_SUBMIT_REVIEW: true

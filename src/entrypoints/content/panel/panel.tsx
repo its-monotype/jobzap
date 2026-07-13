@@ -102,7 +102,7 @@ export function Panel() {
           href="mailto:hello@jobzap.app"
           className="transition-colors hover:text-foreground"
         >
-          Report issue
+          Feedback
         </a>
       </div>
     </div>

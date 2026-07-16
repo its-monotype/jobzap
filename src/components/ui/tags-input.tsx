@@ -218,7 +218,7 @@ export function TagsInput({
                 'has-data-empty:hidden',
               )}
             >
-              <Combobox.List className="no-scrollbar max-h-[min(18rem,var(--available-height))] scroll-py-1 overflow-y-auto overscroll-contain p-1 outline-none">
+              <Combobox.List className="max-h-[min(18rem,var(--available-height))] scroll-py-1 overflow-y-auto overscroll-contain p-1 outline-none">
                 {(item: string) => (
                   <Combobox.Item
                     key={item}

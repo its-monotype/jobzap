@@ -11,6 +11,10 @@ pre-commit:
       stage_fixed: true
 
 pre-push:
+  parallel: true
   jobs:
     - name: typecheck
       run: pnpm typecheck
+
+    - name: test
+      run: pnpm test

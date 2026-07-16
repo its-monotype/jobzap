@@ -328,10 +328,10 @@ function TagsOverflowPopover({
                   <Autocomplete.Item
                     key={item}
                     value={item}
+                    aria-label={`Remove ${item}`}
                     className="flex h-8 w-full cursor-pointer items-center gap-2 rounded-sm px-2 text-sm outline-hidden select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground"
                     onClick={() => onChange(tags.filter((tag) => tag !== item))}
                   >
-                    <span className="sr-only">Remove </span>
                     <span className="min-w-0 flex-1 truncate">{item}</span>
                     <XIcon
                       aria-hidden

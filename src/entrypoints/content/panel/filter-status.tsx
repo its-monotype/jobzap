@@ -1,13 +1,11 @@
 import { cn } from '@/lib/utils';
-import { useActiveFilters, useFilterCounts, useIsAiSearchPage } from '@/store';
-import { TriangleAlert } from 'lucide-react';
+import { useActiveFilters, useFilterCounts } from '@/store';
 
 export function FilterStatus() {
   const activeFilters = useActiveFilters();
   const isFiltering = Object.values(activeFilters).some((v) => v);
   const counts = useFilterCounts();
   const hiddenCount = Object.values(counts).reduce((a, b) => a + b, 0);
-  const isAiSearchPage = useIsAiSearchPage();
 
   return (
     <div className="space-y-2 rounded-lg border px-3 py-2">
@@ -30,13 +28,6 @@ export function FilterStatus() {
           )}
         </div>
       </div>
-
-      {isAiSearchPage && (
-        <div className="flex items-start gap-1.5 text-xs text-amber-700">
-          <TriangleAlert className="mt-0.5 size-3.5 shrink-0" />
-          <p>LinkedIn AI search is beta. Filtering may be unstable.</p>
-        </div>
-      )}
     </div>
   );
 }

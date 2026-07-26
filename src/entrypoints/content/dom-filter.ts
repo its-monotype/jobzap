@@ -4,9 +4,6 @@ import { useAppStore } from '@/store';
 const HIDE_CLASS = 'jz-hidden';
 const STYLE_ID = 'jz-style';
 
-// iframe LinkedIn uses to run legacy Ember search inside the React shell
-export const INTEROP_IFRAME_SELECTOR = 'iframe[data-testid="interop-iframe"]';
-
 export const CLASSIC_LIST_SELECTOR = '.scaffold-layout__list';
 const CLASSIC_CARD_SELECTOR = 'li[data-occludable-job-id]';
 
@@ -103,14 +100,6 @@ function collectAiCards(doc: Document): HTMLElement[] {
 
 function getCards(isAiSearch: boolean): HTMLElement[] {
   if (isAiSearch) return collectAiCards(document);
-
-  // Classic search may be rendered inside an interop iframe when navigating back from the AI search shell
-  const iframeDoc = document.querySelector<HTMLIFrameElement>(
-    INTEROP_IFRAME_SELECTOR,
-  )?.contentDocument;
-  const iframeCards = iframeDoc ? collectClassicCards(iframeDoc) : [];
-  if (iframeCards.length) return iframeCards;
-
   return collectClassicCards(document);
 }
 

@@ -10,7 +10,6 @@ import {
   applyFilters,
   CLASSIC_LIST_SELECTOR,
   injectFilterStyles,
-  INTEROP_IFRAME_SELECTOR,
   removeFilterStyles,
 } from './dom-filter';
 
@@ -135,7 +134,6 @@ export default defineContentScript({
     });
 
     let timeoutId: number | undefined;
-    let iframeObserver: MutationObserver | null = null;
     let listObserver: MutationObserver | null = null;
 
     const debouncedApply = () => {
@@ -152,42 +150,6 @@ export default defineContentScript({
         document.body;
       listObserver = new MutationObserver(debouncedApply);
       listObserver.observe(target, { childList: true, subtree: true });
-    };
-
-    // When navigating from AI search back to classic search, LinkedIn renders the classic legacy Ember search inside an interop iframe
-    const observeInteropIframe = () => {
-      if (iframeObserver) return;
-      const iframe = document.querySelector<HTMLIFrameElement>(
-        INTEROP_IFRAME_SELECTOR,
-      );
-      if (!iframe?.contentDocument?.body) return;
-
-      injectFilterStyles(iframe.contentDocument);
-
-      const iframeListTarget =
-        iframe.contentDocument.querySelector(CLASSIC_LIST_SELECTOR) ??
-        iframe.contentDocument.body;
-
-      // When the iframe is present on classic search page, the main document belongs to the stale AI search shell
-      listObserver?.disconnect();
-      listObserver = null;
-
-      iframeObserver = new MutationObserver(debouncedApply);
-      iframeObserver.observe(iframeListTarget, {
-        childList: true,
-        subtree: true,
-      });
-
-      iframe.addEventListener(
-        'load',
-        () => {
-          iframeObserver?.disconnect();
-          iframeObserver = null;
-          applyFilters();
-          observeInteropIframe();
-        },
-        { once: true },
-      );
     };
 
     const unsubscribeStore = useAppStore.subscribe((state, prevState) => {
@@ -214,8 +176,6 @@ export default defineContentScript({
 
     ctx.addEventListener(window, 'wxt:locationchange', ({ newUrl }) => {
       currentUrl = newUrl.href;
-      iframeObserver?.disconnect();
-      iframeObserver = null;
 
       if (!isJobSearchPage(currentUrl)) {
         listObserver?.disconnect();
@@ -229,11 +189,6 @@ export default defineContentScript({
       if (!ui.mounted) ui.mount();
       applyFilters();
       observeJobList();
-
-      // Classic search page may render inside an iframe when navigating back from AI search
-      if (isClassicSearchPage(currentUrl)) {
-        observeInteropIframe();
-      }
     });
 
     ctx.onInvalidated(() => {
@@ -241,17 +196,8 @@ export default defineContentScript({
       unsubscribeStore();
       listObserver?.disconnect();
       listObserver = null;
-      iframeObserver?.disconnect();
-      iframeObserver = null;
 
       removeFilterStyles(document);
-
-      const iframeDoc = document.querySelector<HTMLIFrameElement>(
-        INTEROP_IFRAME_SELECTOR,
-      )?.contentDocument;
-      if (iframeDoc) {
-        removeFilterStyles(iframeDoc);
-      }
     });
 
     browser.runtime.onMessage.addListener(

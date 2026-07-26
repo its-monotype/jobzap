@@ -4,3 +4,6 @@ allowBuilds:
   msw: false
   sharp: true
   spawn-sync: false
+
+overrides:
+  vite@8.0.10>lightningcss: 1.33.0

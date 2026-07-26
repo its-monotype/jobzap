@@ -3,6 +3,7 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { useActions, useSettings } from '@/store';
 import { BlockedCompanies } from './blocked-companies';
+import { DescriptionHighlights } from './description-highlights';
 import { ExcludedKeywords } from './excluded-keywords';
 import { FilterStatus } from './filter-status';
 import { PostedWithin } from './posted-within';
@@ -86,6 +87,10 @@ export function Panel() {
 
         <BlockedCompanies />
         <ExcludedKeywords />
+
+        <Separator />
+
+        <DescriptionHighlights />
       </div>
 
       <div className="flex items-center justify-center gap-2 border-t px-4 py-3 text-xs text-muted-foreground">

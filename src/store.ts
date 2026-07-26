@@ -25,6 +25,7 @@ interface Settings {
   enabledFilters: Record<FilterId, boolean>;
   blockedCompanies: string[];
   excludedKeywords: string[];
+  descriptionKeywords: string[];
   postedWithin: number | null;
   defaultToRecentSort: boolean;
 }
@@ -45,6 +46,7 @@ interface AppStore {
     blockCompany: (company: string) => void;
     unblockCompany: (company: string) => void;
     setExcludedKeywords: (keywords: string[]) => void;
+    setDescriptionKeywords: (keywords: string[]) => void;
 
     setPostedWithin: (value: number | null) => void;
     setDefaultToRecentSort: (value: boolean) => void;
@@ -80,6 +82,7 @@ const defaultSettings: Settings = {
   },
   blockedCompanies: [],
   excludedKeywords: [],
+  descriptionKeywords: [],
   postedWithin: null,
   defaultToRecentSort: false,
 };
@@ -169,6 +172,8 @@ export const useAppStore = create<AppStore>()(
         },
         setExcludedKeywords: (excludedKeywords) =>
           set((s) => ({ settings: { ...s.settings, excludedKeywords } })),
+        setDescriptionKeywords: (descriptionKeywords) =>
+          set((s) => ({ settings: { ...s.settings, descriptionKeywords } })),
 
         setPostedWithin: (postedWithin) =>
           set((s) => ({ settings: { ...s.settings, postedWithin } })),
@@ -188,6 +193,27 @@ export const useAppStore = create<AppStore>()(
         settings: state.settings,
         activeFilters: state.activeFilters,
       }),
+      merge: (persistedState, currentState) => {
+        const persisted = (persistedState ?? {}) as Partial<
+          Pick<AppStore, 'settings' | 'activeFilters'>
+        >;
+
+        return {
+          ...currentState,
+          settings: {
+            ...currentState.settings,
+            ...persisted.settings,
+            enabledFilters: {
+              ...currentState.settings.enabledFilters,
+              ...persisted.settings?.enabledFilters,
+            },
+          },
+          activeFilters: {
+            ...currentState.activeFilters,
+            ...persisted.activeFilters,
+          },
+        };
+      },
       storage: createJSONStorage(() => wxtStorage),
     },
   ),

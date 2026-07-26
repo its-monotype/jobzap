@@ -7,6 +7,7 @@ import { useAppStore } from '@/store';
 import ReactDOM from 'react-dom/client';
 import { App } from './app';
 import { createCompanyBlockButton } from './company-block-button';
+import { setupDescriptionHighlights } from './description-highlights';
 import {
   AI_LIST_SELECTOR,
   applyFilters,
@@ -139,6 +140,8 @@ export default defineContentScript({
 
     const companyBlockButton = createCompanyBlockButton(ctx);
     companyBlockButton.autoMount();
+
+    setupDescriptionHighlights(ctx, isJobSearchPage);
 
     let listObserver: MutationObserver | null = null;
 

@@ -23,18 +23,15 @@ export function BlockedCompanies() {
       </div>
       <TagsInput
         value={blockedCompanies}
-        onChange={(next) => {
-          const prevCount = blockedCompanies.length;
-          const isClearAll = prevCount > 1 && next.length === 0;
-
-          if (isClearAll) {
-            const confirmed = window.confirm(
-              `Clear all ${prevCount} blocked companies?`,
-            );
-            if (!confirmed) return;
+        onChange={actions.setBlockedCompanies}
+        onClear={() => {
+          if (
+            window.confirm(
+              `Clear all ${blockedCompanies.length} blocked companies?`,
+            )
+          ) {
+            actions.setBlockedCompanies([]);
           }
-
-          actions.setBlockedCompanies(next);
         }}
         suggestions={visibleCompanies}
         placeholder="Add company..."

@@ -12,6 +12,7 @@ const CHIP_LIMIT = 3;
 export interface TagsInputProps {
   value: string[];
   onChange: (next: string[]) => void;
+  onClear?: () => void;
   suggestions?: string[];
   placeholder?: string;
   disabled?: boolean;
@@ -36,6 +37,7 @@ function splitValues(text: string) {
 export function TagsInput({
   value,
   onChange,
+  onClear,
   suggestions = [],
   placeholder,
   disabled = false,
@@ -182,6 +184,7 @@ export function TagsInput({
                       inputRef={inputRef}
                       onOpen={() => setSuggestionsOpen(false)}
                       onChange={onChange}
+                      onClear={onClear}
                     />
                   )}
 
@@ -249,6 +252,7 @@ interface TagsOverflowPopoverProps {
   inputRef: React.RefObject<HTMLInputElement | null>;
   onOpen: () => void;
   onChange: (next: string[]) => void;
+  onClear?: () => void;
 }
 
 function TagsOverflowPopover({
@@ -258,9 +262,19 @@ function TagsOverflowPopover({
   inputRef,
   onOpen,
   onChange,
+  onClear,
 }: TagsOverflowPopoverProps) {
   const portalContainer = usePortalContainer();
   const triggerRef = useRef<HTMLButtonElement>(null);
+
+  function clearAll() {
+    if (onClear) {
+      onClear();
+      return;
+    }
+
+    onChange([]);
+  }
 
   return (
     <Popover.Root
@@ -349,7 +363,7 @@ function TagsOverflowPopover({
                 size="sm"
                 disabled={disabled}
                 className="w-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                onClick={() => onChange([])}
+                onClick={clearAll}
               >
                 Clear all
               </Button>

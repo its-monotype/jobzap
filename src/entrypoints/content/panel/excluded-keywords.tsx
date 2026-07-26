@@ -12,7 +12,7 @@ export function ExcludedKeywords() {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <div className="text-sm">Keywords</div>
+        <div className="text-sm">Title keywords</div>
         <Switch
           checked={enabled}
           onCheckedChange={(checked) =>
@@ -22,18 +22,15 @@ export function ExcludedKeywords() {
       </div>
       <TagsInput
         value={keywords}
-        onChange={(next) => {
-          const prevCount = keywords.length;
-          const isClearAll = prevCount > 1 && next.length === 0;
-
-          if (isClearAll) {
-            const confirmed = window.confirm(
-              `Clear all ${prevCount} excluded keywords?`,
-            );
-            if (!confirmed) return;
+        onChange={actions.setExcludedKeywords}
+        onClear={() => {
+          if (
+            window.confirm(
+              `Clear all ${keywords.length} excluded job title keywords?`,
+            )
+          ) {
+            actions.setExcludedKeywords([]);
           }
-
-          actions.setExcludedKeywords(next);
         }}
         placeholder="Add keyword..."
       />

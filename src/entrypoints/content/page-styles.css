@@ -1,0 +1,33 @@
+.jz-hidden {
+  display: none !important;
+}
+
+.jz-company-block-button {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  appearance: none;
+  margin-inline-start: 8px;
+  margin-inline-end: auto;
+  padding: 1px 8px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 20px;
+  vertical-align: middle;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.jz-company-block-button:hover {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.jz-company-block-button:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}

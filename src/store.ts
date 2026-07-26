@@ -7,6 +7,19 @@ import {
 } from 'zustand/middleware';
 import { useShallow } from 'zustand/shallow';
 import type { FilterId } from './constants';
+import { normalizeText } from './lib/utils';
+
+export function isCompanyBlocked(
+  companyName: string,
+  blockedCompanies: readonly string[],
+): boolean {
+  const company = normalizeText(companyName).toLowerCase();
+
+  return blockedCompanies.some((blockedCompany) => {
+    const blocked = normalizeText(blockedCompany).toLowerCase();
+    return blocked.length > 0 && company.includes(blocked);
+  });
+}
 
 interface Settings {
   enabledFilters: Record<FilterId, boolean>;
@@ -29,6 +42,8 @@ interface AppStore {
     toggleFilterActive: (id: FilterId) => void;
 
     setBlockedCompanies: (companies: string[]) => void;
+    blockCompany: (company: string) => void;
+    unblockCompany: (company: string) => void;
     setExcludedKeywords: (keywords: string[]) => void;
 
     setPostedWithin: (value: number | null) => void;
@@ -112,6 +127,46 @@ export const useAppStore = create<AppStore>()(
 
         setBlockedCompanies: (blockedCompanies) =>
           set((s) => ({ settings: { ...s.settings, blockedCompanies } })),
+        blockCompany: (company) => {
+          const name = normalizeText(company);
+          if (!name) return;
+
+          set((s) => ({
+            settings: {
+              ...s.settings,
+              enabledFilters: {
+                ...s.settings.enabledFilters,
+                companies: true,
+              },
+              blockedCompanies: isCompanyBlocked(
+                name,
+                s.settings.blockedCompanies,
+              )
+                ? s.settings.blockedCompanies
+                : [...s.settings.blockedCompanies, name],
+            },
+            activeFilters: {
+              ...s.activeFilters,
+              companies: true,
+            },
+          }));
+        },
+        unblockCompany: (company) => {
+          const name = normalizeText(company).toLowerCase();
+          if (!name) return;
+
+          set((s) => ({
+            settings: {
+              ...s.settings,
+              blockedCompanies: s.settings.blockedCompanies.filter(
+                (blockedCompany) => {
+                  const blocked = normalizeText(blockedCompany).toLowerCase();
+                  return !blocked || !name.includes(blocked);
+                },
+              ),
+            },
+          }));
+        },
         setExcludedKeywords: (excludedKeywords) =>
           set((s) => ({ settings: { ...s.settings, excludedKeywords } })),
 

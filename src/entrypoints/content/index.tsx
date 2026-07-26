@@ -1,17 +1,17 @@
 import '@/globals.css';
+import pageStyles from './page-styles.css?inline';
 
 import { browser, createShadowRootUi, defineContentScript } from '#imports';
 import { PortalContainerProvider } from '@/contexts/portal-container';
 import { useAppStore } from '@/store';
 import ReactDOM from 'react-dom/client';
 import { App } from './app';
+import { createCompanyBlockButton } from './company-block-button';
 import {
   AI_LIST_SELECTOR,
   applyFilters,
   CLASSIC_LIST_SELECTOR,
-  injectFilterStyles,
-  removeFilterStyles,
-} from './dom-filter';
+} from './job-list-filter';
 
 export function isClassicSearchPage(url: string): boolean {
   const { pathname } = new URL(url);
@@ -110,7 +110,11 @@ export default defineContentScript({
 
     syncFromUrl(currentUrl);
 
-    injectFilterStyles();
+    const pageStyle = document.createElement('style');
+    pageStyle.id = 'jz-style';
+    pageStyle.textContent = pageStyles;
+    document.getElementById(pageStyle.id)?.remove();
+    (document.head ?? document.documentElement).append(pageStyle);
 
     const ui = await createShadowRootUi(ctx, {
       name: 'jobzap-ui',
@@ -133,23 +137,27 @@ export default defineContentScript({
       },
     });
 
-    let timeoutId: number | undefined;
-    let listObserver: MutationObserver | null = null;
+    const companyBlockButton = createCompanyBlockButton(ctx);
+    companyBlockButton.autoMount();
 
-    const debouncedApply = () => {
-      if (!isJobSearchPage(currentUrl)) return;
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = ctx.setTimeout(applyFilters, 200);
-    };
+    let listObserver: MutationObserver | null = null;
 
     const observeJobList = () => {
       listObserver?.disconnect();
-      const target =
+      const jobList =
         document.querySelector(CLASSIC_LIST_SELECTOR) ??
-        document.querySelector(AI_LIST_SELECTOR) ??
-        document.body;
-      listObserver = new MutationObserver(debouncedApply);
-      listObserver.observe(target, { childList: true, subtree: true });
+        document.querySelector(AI_LIST_SELECTOR);
+
+      if (!jobList) {
+        listObserver = null;
+        return;
+      }
+
+      listObserver = new MutationObserver(() => applyFilters());
+      listObserver.observe(jobList, {
+        childList: true,
+        subtree: true,
+      });
     };
 
     const unsubscribeStore = useAppStore.subscribe((state, prevState) => {
@@ -191,22 +199,21 @@ export default defineContentScript({
       observeJobList();
     });
 
+    const handleRuntimeMessage = (message: Record<string, unknown>) => {
+      if (message.type === 'TOGGLE_PANEL') {
+        useAppStore.getState().actions.togglePanelOpen();
+      }
+    };
+    browser.runtime.onMessage.addListener(handleRuntimeMessage);
+
     ctx.onInvalidated(() => {
-      ui.remove();
+      companyBlockButton.remove();
       unsubscribeStore();
+      browser.runtime.onMessage.removeListener(handleRuntimeMessage);
       listObserver?.disconnect();
       listObserver = null;
-
-      removeFilterStyles(document);
+      pageStyle.remove();
     });
-
-    browser.runtime.onMessage.addListener(
-      (message: Record<string, unknown>) => {
-        if (message.type === 'TOGGLE_PANEL') {
-          useAppStore.getState().actions.togglePanelOpen();
-        }
-      },
-    );
 
     if (isJobSearchPage(currentUrl)) {
       if (applyUrlModifiers(currentUrl)) return; // page will reload

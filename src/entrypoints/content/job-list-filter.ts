@@ -1,8 +1,8 @@
 import type { FilterId } from '@/constants';
+import { normalizeText } from '@/lib/utils';
 import { useAppStore } from '@/store';
 
 const HIDE_CLASS = 'jz-hidden';
-const STYLE_ID = 'jz-style';
 
 export const CLASSIC_LIST_SELECTOR = '.scaffold-layout__list';
 const CLASSIC_CARD_SELECTOR = 'li[data-occludable-job-id]';
@@ -12,10 +12,6 @@ const DISMISSED_UNDO_BTN = 'button[aria-label$=" job is dismissed, undo"]'; // p
 
 export const AI_LIST_SELECTOR = '[componentkey="SearchResultsMainContent"]';
 const AI_CARD_MARKER = `${DISMISS_BTN}, ${DISMISSED_UNDO_BTN}`;
-
-function normalizeText(value: string | null | undefined): string {
-  return value?.replace(/\s+/g, ' ').trim() ?? '';
-}
 
 /** Queries selector and returns normalized textContent, empty string if not found. */
 function getText(root: ParentNode, selector: string): string {
@@ -85,12 +81,14 @@ function isAiDismissed(card: HTMLElement): boolean {
   return !!card.querySelector(DISMISSED_UNDO_BTN);
 }
 
-function collectClassicCards(doc: Document): HTMLElement[] {
-  return Array.from(doc.querySelectorAll<HTMLElement>(CLASSIC_CARD_SELECTOR));
+function collectClassicCards(): HTMLElement[] {
+  return Array.from(
+    document.querySelectorAll<HTMLElement>(CLASSIC_CARD_SELECTOR),
+  );
 }
 
-function collectAiCards(doc: Document): HTMLElement[] {
-  const list = doc.querySelector<HTMLElement>(AI_LIST_SELECTOR);
+function collectAiCards(): HTMLElement[] {
+  const list = document.querySelector<HTMLElement>(AI_LIST_SELECTOR);
   if (!list) return [];
 
   return (Array.from(list.children) as HTMLElement[]).filter(
@@ -99,8 +97,7 @@ function collectAiCards(doc: Document): HTMLElement[] {
 }
 
 function getCards(isAiSearch: boolean): HTMLElement[] {
-  if (isAiSearch) return collectAiCards(document);
-  return collectClassicCards(document);
+  return isAiSearch ? collectAiCards() : collectClassicCards();
 }
 
 /** Hides the <hr> separator after each hidden card to avoid stacking dividers between visible cards. */
@@ -119,18 +116,6 @@ function normalizeAiHr() {
   }
 }
 
-export function injectFilterStyles(doc: Document = document) {
-  if (doc.getElementById(STYLE_ID)) return;
-  const s = doc.createElement('style');
-  s.id = STYLE_ID;
-  s.textContent = `.${HIDE_CLASS}{display:none!important;}`;
-  (doc.head ?? doc.documentElement).appendChild(s);
-}
-
-export function removeFilterStyles(doc: Document = document) {
-  doc.getElementById(STYLE_ID)?.remove();
-}
-
 export function applyFilters() {
   const {
     activeFilters,
@@ -141,12 +126,12 @@ export function applyFilters() {
 
   const cards = getCards(isAiSearch);
 
-  const blockedCompanies = settings.blockedCompanies.map((c) =>
-    c.toLowerCase(),
-  );
-  const excludedKeywords = settings.excludedKeywords.map((k) =>
-    k.toLowerCase(),
-  );
+  const blockedCompanies = settings.blockedCompanies
+    .map((company) => normalizeText(company).toLowerCase())
+    .filter(Boolean);
+  const excludedKeywords = settings.excludedKeywords
+    .map((keyword) => normalizeText(keyword).toLowerCase())
+    .filter(Boolean);
 
   const counts: Partial<Record<FilterId, number>> = {};
   const visibleCompanies = new Set<string>();
@@ -187,6 +172,4 @@ export function applyFilters() {
 
   actions.setFilterCounts(counts);
   actions.setVisibleCompanies(Array.from(visibleCompanies).sort());
-
-  console.log('applyFilters', { total: cards.length, ...counts });
 }

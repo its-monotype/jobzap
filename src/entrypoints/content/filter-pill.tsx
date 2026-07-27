@@ -19,6 +19,7 @@ export function FilterPill({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       style={
         {
           '--pill-color': color,

@@ -1,7 +1,5 @@
-import type { ContentScriptContext } from '#imports';
 import { normalizeText } from '@/lib/utils';
 import { useSettingsStore } from '@/settings-store';
-import { resolveJobDescription } from './job-details';
 
 const DESCRIPTION_HIGHLIGHT = 'jobzap-description-highlight';
 const TEXT_BLOCK_SELECTOR =
@@ -112,9 +110,13 @@ function clearHighlights(): void {
   CSS.highlights?.delete(DESCRIPTION_HIGHLIGHT);
 }
 
-function highlightDescription(description: HTMLElement): void {
+export function updateDescriptionHighlights(
+  description: HTMLElement | null,
+): void {
   clearHighlights();
-  if (!CSS.highlights || typeof Highlight === 'undefined') return;
+  if (!description || !CSS.highlights || typeof Highlight === 'undefined') {
+    return;
+  }
 
   const { descriptionKeywords } = useSettingsStore.getState().settings;
   const ranges = findKeywordRanges(description, descriptionKeywords);
@@ -122,81 +124,4 @@ function highlightDescription(description: HTMLElement): void {
   if (ranges.length > 0) {
     CSS.highlights.set(DESCRIPTION_HIGHLIGHT, new Highlight(...ranges));
   }
-}
-
-export function createDescriptionHighlights(ctx: ContentScriptContext) {
-  if (!CSS.highlights || typeof Highlight === 'undefined') {
-    return {
-      start: () => undefined,
-      stop: () => undefined,
-    };
-  }
-
-  let description: HTMLElement | null = null;
-  let active = false;
-
-  function refresh(nextDescription = resolveJobDescription()) {
-    description = nextDescription;
-
-    if (nextDescription) {
-      highlightDescription(nextDescription);
-    } else {
-      clearHighlights();
-    }
-  }
-
-  const observer = new MutationObserver((mutations) => {
-    if (!active) return;
-
-    const currentDescription = description;
-    if (!currentDescription?.isConnected) {
-      refresh();
-      return;
-    }
-
-    if (
-      mutations.some((mutation) => currentDescription.contains(mutation.target))
-    ) {
-      highlightDescription(currentDescription);
-    }
-  });
-
-  function start(): void {
-    if (active) return;
-
-    active = true;
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-    refresh();
-  }
-
-  function stop(): void {
-    if (!active) return;
-
-    active = false;
-    observer.disconnect();
-    description = null;
-    clearHighlights();
-  }
-
-  const unsubscribe = useSettingsStore.subscribe((state, previousState) => {
-    if (!active) return;
-
-    if (
-      state.settings.descriptionKeywords !==
-      previousState.settings.descriptionKeywords
-    ) {
-      refresh();
-    }
-  });
-
-  ctx.onInvalidated(() => {
-    stop();
-    unsubscribe();
-  });
-
-  return { start, stop };
 }

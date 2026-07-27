@@ -125,10 +125,9 @@ function normalizeSemanticHr(list: HTMLElement) {
   }
 }
 
-export function applyFilters() {
+export function applyFilters(jobList: JobListContext | null) {
   const { activeFilters, settings } = useSettingsStore.getState();
 
-  const jobList = resolveJobList();
   const isSemantic = jobList?.layout === 'semantic';
   const cards = jobList ? collectCards(jobList) : [];
 
@@ -144,9 +143,7 @@ export function applyFilters() {
 
   for (const el of cards) {
     const text = (el.textContent ?? '').toLowerCase();
-    const meta = isSemantic
-      ? extractSemanticMeta(el)
-      : extractClassicMeta(el);
+    const meta = isSemantic ? extractSemanticMeta(el) : extractClassicMeta(el);
     const title = meta.title.toLowerCase();
     const company = meta.company.toLowerCase();
 

@@ -14,12 +14,13 @@ const SEMANTIC_DESCRIPTION_SELECTOR = '[id^="JobDetails_AboutTheJob_"]';
 
 export const COMPANY_ANCHOR_SELECTOR = `${CLASSIC_COMPANY_SELECTOR}, ${SEMANTIC_COMPANY_ANCHOR_SELECTOR}`;
 
-export interface JobDetailsContext {
+interface JobDetailsContext {
   layout: 'classic' | 'semantic';
   root: HTMLElement;
+  description: HTMLElement | null;
 }
 
-export interface CompanyTarget {
+interface CompanyTarget {
   companyName: string;
   anchor: HTMLElement;
 }
@@ -28,17 +29,34 @@ export function resolveJobDetails(): JobDetailsContext | null {
   const semanticRoot = document.querySelector<HTMLElement>(
     SEMANTIC_DETAILS_SELECTOR,
   );
-  if (semanticRoot) return { layout: 'semantic', root: semanticRoot };
+  if (semanticRoot) {
+    return {
+      layout: 'semantic',
+      root: semanticRoot,
+      description: semanticRoot.querySelector<HTMLElement>(
+        SEMANTIC_DESCRIPTION_SELECTOR,
+      ),
+    };
+  }
 
   const classicRoot = document.querySelector<HTMLElement>(
     CLASSIC_DETAILS_SELECTOR,
   );
-  return classicRoot ? { layout: 'classic', root: classicRoot } : null;
+  return classicRoot
+    ? {
+        layout: 'classic',
+        root: classicRoot,
+        description: classicRoot.querySelector<HTMLElement>(
+          CLASSIC_DESCRIPTION_SELECTOR,
+        ),
+      }
+    : null;
 }
 
-export function findCompanyTarget(
-  context: JobDetailsContext,
-): CompanyTarget | null {
+export function resolveCompanyTarget(): CompanyTarget | null {
+  const context = resolveJobDetails();
+  if (!context) return null;
+
   if (context.layout === 'classic') {
     const anchor = context.root.querySelector<HTMLElement>(
       CLASSIC_COMPANY_SELECTOR,
@@ -57,16 +75,4 @@ export function findCompanyTarget(
   const companyName = normalizeText(companyElement?.textContent);
 
   return anchor && companyName ? { companyName, anchor } : null;
-}
-
-export function resolveJobDescription(): HTMLElement | null {
-  const context = resolveJobDetails();
-  if (!context) return null;
-
-  const selector =
-    context.layout === 'classic'
-      ? CLASSIC_DESCRIPTION_SELECTOR
-      : SEMANTIC_DESCRIPTION_SELECTOR;
-
-  return context.root.querySelector<HTMLElement>(selector);
 }

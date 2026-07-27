@@ -1,20 +1,11 @@
 import { createIntegratedUi, type ContentScriptContext } from '#imports';
 import { isCompanyBlocked, useSettingsStore } from '@/settings-store';
-import {
-  COMPANY_ANCHOR_SELECTOR,
-  findCompanyTarget,
-  resolveJobDetails,
-} from './job-details';
+import { COMPANY_ANCHOR_SELECTOR, resolveCompanyTarget } from './job-details';
 
 const BUTTON_CLASS = 'jz-company-block-button';
 
-function getCurrentTarget() {
-  const context = resolveJobDetails();
-  return context ? findCompanyTarget(context) : null;
-}
-
 function updateButton(button: HTMLButtonElement): void {
-  const target = getCurrentTarget();
+  const target = resolveCompanyTarget();
   if (!target) return;
 
   const { blockedCompanies } = useSettingsStore.getState().settings;
@@ -29,7 +20,7 @@ function handleClick(event: MouseEvent): void {
   event.preventDefault();
   event.stopPropagation();
 
-  const target = getCurrentTarget();
+  const target = resolveCompanyTarget();
   if (!target) return;
 
   const { actions, settings } = useSettingsStore.getState();

@@ -5,12 +5,14 @@ import { createShadowRootUi, defineContentScript } from '#imports';
 import { PortalContainerProvider } from '@/contexts/portal-container';
 import { useSettingsStore } from '@/settings-store';
 import ReactDOM from 'react-dom/client';
+import { shallow } from 'zustand/vanilla/shallow';
 import { App } from './app';
 import { createCompanyBlockButton } from './company-block-button';
-import { createDescriptionHighlights } from './description-highlights';
+import { updateDescriptionHighlights } from './description-highlights';
+import { resolveJobDetails } from './job-details';
 import { applyFilters, resolveJobList } from './job-list-filter';
 
-export function isClassicSearchPage(url: string): boolean {
+function isClassicSearchPage(url: string): boolean {
   const { pathname } = new URL(url);
   return (
     pathname.startsWith('/jobs/search/') ||
@@ -18,14 +20,14 @@ export function isClassicSearchPage(url: string): boolean {
   );
 }
 
-export function isSemanticSearchPage(url: string): boolean {
+function isSemanticSearchPage(url: string): boolean {
   const { pathname, searchParams } = new URL(url);
   return (
     pathname.startsWith('/jobs/search-results/') && searchParams.has('keywords')
   );
 }
 
-export function isJobSearchPage(url: string): boolean {
+function isJobSearchPage(url: string): boolean {
   return isClassicSearchPage(url) || isSemanticSearchPage(url);
 }
 
@@ -73,16 +75,18 @@ function syncClassicSettingsFromUrl(url: string) {
 
   const parsed = new URL(url);
   const fTPR = parsed.searchParams.get('f_TPR');
+  const { actions, settings } = useSettingsStore.getState();
 
   if (fTPR?.startsWith('r')) {
     const seconds = Number(fTPR.slice(1));
-    if (Number.isFinite(seconds) && seconds > 0) {
-      useSettingsStore
-        .getState()
-        .actions.setPostedWithin(Math.round(seconds / 60));
+    if (!Number.isFinite(seconds) || seconds <= 0) return;
+
+    const postedWithin = Math.round(seconds / 60);
+    if (settings.postedWithin !== postedWithin) {
+      actions.setPostedWithin(postedWithin);
     }
-  } else if (fTPR === null) {
-    useSettingsStore.getState().actions.setPostedWithin(null);
+  } else if (fTPR === null && settings.postedWithin !== null) {
+    actions.setPostedWithin(null);
   }
 }
 
@@ -113,7 +117,7 @@ export default defineContentScript({
     document.getElementById(pageStyle.id)?.remove();
     (document.head ?? document.documentElement).append(pageStyle);
 
-    const ui = await createShadowRootUi(ctx, {
+    const panelUi = await createShadowRootUi(ctx, {
       name: 'jobzap-ui',
       position: 'inline',
       anchor: 'body',
@@ -137,24 +141,59 @@ export default defineContentScript({
     const companyBlockButton = createCompanyBlockButton(ctx);
     companyBlockButton.autoMount();
 
-    const descriptionHighlights = createDescriptionHighlights(ctx);
+    let jobListRoot: HTMLElement | null = null;
+    let jobDescription: HTMLElement | null = null;
 
-    let listObserver: MutationObserver | null = null;
+    const syncJobList = () => {
+      const jobList = resolveJobList();
+      jobListRoot = jobList?.root ?? null;
+      applyFilters(jobList);
+    };
 
-    const observeJobList = () => {
-      listObserver?.disconnect();
-      const jobList = resolveJobList()?.root;
+    const syncDescriptionHighlights = () => {
+      jobDescription = resolveJobDetails()?.description ?? null;
+      updateDescriptionHighlights(jobDescription);
+    };
 
-      if (!jobList) {
-        listObserver = null;
-        return;
+    const pageObserver = new MutationObserver((mutations) => {
+      const currentJobListRoot = jobListRoot;
+      const shouldSyncJobList =
+        !currentJobListRoot?.isConnected ||
+        mutations.some((mutation) =>
+          currentJobListRoot.contains(mutation.target),
+        );
+
+      const currentJobDescription = jobDescription;
+      const shouldSyncDescription =
+        !currentJobDescription?.isConnected ||
+        mutations.some((mutation) =>
+          currentJobDescription.contains(mutation.target),
+        );
+
+      if (shouldSyncJobList) {
+        syncJobList();
       }
 
-      listObserver = new MutationObserver(() => applyFilters());
-      listObserver.observe(jobList, {
+      if (shouldSyncDescription) {
+        syncDescriptionHighlights();
+      }
+    });
+
+    const observePage = () => {
+      pageObserver.disconnect();
+      pageObserver.observe(document.body, {
         childList: true,
         subtree: true,
       });
+      syncJobList();
+      syncDescriptionHighlights();
+    };
+
+    const stopObservingPage = () => {
+      pageObserver.disconnect();
+      jobListRoot = null;
+      jobDescription = null;
+      updateDescriptionHighlights(null);
     };
 
     const unsubscribeStore = useSettingsStore.subscribe((state, prevState) => {
@@ -170,12 +209,26 @@ export default defineContentScript({
       }
 
       if (
-        state.activeFilters !== prevState.activeFilters ||
-        state.settings.blockedCompanies !==
-          prevState.settings.blockedCompanies ||
-        state.settings.excludedKeywords !== prevState.settings.excludedKeywords
+        !shallow(
+          state.settings.descriptionKeywords,
+          prevState.settings.descriptionKeywords,
+        )
       ) {
-        applyFilters();
+        syncDescriptionHighlights();
+      }
+
+      if (
+        !shallow(state.activeFilters, prevState.activeFilters) ||
+        !shallow(
+          state.settings.blockedCompanies,
+          prevState.settings.blockedCompanies,
+        ) ||
+        !shallow(
+          state.settings.excludedKeywords,
+          prevState.settings.excludedKeywords,
+        )
+      ) {
+        syncJobList();
       }
     });
 
@@ -183,35 +236,27 @@ export default defineContentScript({
       currentUrl = newUrl.href;
 
       if (!isJobSearchPage(currentUrl)) {
-        listObserver?.disconnect();
-        listObserver = null;
-        descriptionHighlights.stop();
-        ui.remove();
+        stopObservingPage();
+        panelUi.remove();
         return;
       }
 
       syncClassicSettingsFromUrl(currentUrl);
       if (applyUrlModifiers(currentUrl)) return; // page will reload
-      if (!ui.mounted) ui.mount();
-      descriptionHighlights.start();
-      applyFilters();
-      observeJobList();
+      if (!panelUi.mounted) panelUi.mount();
+      observePage();
     });
 
     ctx.onInvalidated(() => {
-      companyBlockButton.remove();
       unsubscribeStore();
-      listObserver?.disconnect();
-      listObserver = null;
+      stopObservingPage();
       pageStyle.remove();
     });
 
     if (isJobSearchPage(currentUrl)) {
       if (applyUrlModifiers(currentUrl)) return; // page will reload
-      ui.mount();
-      descriptionHighlights.start();
-      applyFilters();
-      observeJobList();
+      panelUi.mount();
+      observePage();
     }
   },
 });

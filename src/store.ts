@@ -35,7 +35,6 @@ interface AppStore {
   activeFilters: Record<FilterId, boolean>;
   filterCounts: Partial<Record<FilterId, number>>;
   visibleCompanies: string[];
-  isAiSearchPage: boolean;
   panelOpen: boolean;
   actions: {
     setFilterEnabled: (id: FilterId, enabled: boolean) => void;
@@ -54,7 +53,6 @@ interface AppStore {
     setFilterCounts: (counts: Partial<Record<FilterId, number>>) => void;
 
     setVisibleCompanies: (companies: string[]) => void;
-    setIsAiSearchPage: (value: boolean) => void;
     togglePanelOpen: () => void;
   };
 }
@@ -96,7 +94,6 @@ export const useAppStore = create<AppStore>()(
       },
       filterCounts: {},
       visibleCompanies: [],
-      isAiSearchPage: false,
       panelOpen: false,
       actions: {
         setFilterEnabled: (id, enabled) =>
@@ -183,7 +180,6 @@ export const useAppStore = create<AppStore>()(
         setFilterCounts: (counts) => set({ filterCounts: counts }),
 
         setVisibleCompanies: (visibleCompanies) => set({ visibleCompanies }),
-        setIsAiSearchPage: (isAiSearchPage) => set({ isAiSearchPage }),
         togglePanelOpen: () => set((s) => ({ panelOpen: !s.panelOpen })),
       },
     }),
@@ -233,5 +229,4 @@ export const useFilterCounts = () =>
   useAppStore(useShallow((s) => s.filterCounts));
 export const useVisibleCompanies = () =>
   useAppStore(useShallow((s) => s.visibleCompanies));
-export const useIsAiSearchPage = () => useAppStore((s) => s.isAiSearchPage);
 export const usePanelOpen = () => useAppStore((s) => s.panelOpen);

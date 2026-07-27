@@ -4,14 +4,29 @@ import { useAppStore } from '@/store';
 
 const HIDE_CLASS = 'jz-hidden';
 
-export const CLASSIC_LIST_SELECTOR = '.scaffold-layout__list';
+const CLASSIC_LIST_SELECTOR = '.scaffold-layout__list';
 const CLASSIC_CARD_SELECTOR = 'li[data-occludable-job-id]';
 
 const DISMISS_BTN = 'button[aria-label^="Dismiss "][aria-label$=" job"]';
 const DISMISSED_UNDO_BTN = 'button[aria-label$=" job is dismissed, undo"]'; // present on dismissed cards of both types
 
-export const AI_LIST_SELECTOR = '[componentkey="SearchResultsMainContent"]';
+const AI_LIST_SELECTOR = '[componentkey="SearchResultsMainContent"]';
 const AI_CARD_MARKER = `${DISMISS_BTN}, ${DISMISSED_UNDO_BTN}`;
+
+interface JobListContext {
+  layout: 'classic' | 'ai';
+  root: HTMLElement;
+}
+
+export function resolveJobList(): JobListContext | null {
+  const aiRoot = document.querySelector<HTMLElement>(AI_LIST_SELECTOR);
+  if (aiRoot) return { layout: 'ai', root: aiRoot };
+
+  const classicRoot = document.querySelector<HTMLElement>(
+    CLASSIC_LIST_SELECTOR,
+  );
+  return classicRoot ? { layout: 'classic', root: classicRoot } : null;
+}
 
 /** Queries selector and returns normalized textContent, empty string if not found. */
 function getText(root: ParentNode, selector: string): string {
@@ -81,30 +96,21 @@ function isAiDismissed(card: HTMLElement): boolean {
   return !!card.querySelector(DISMISSED_UNDO_BTN);
 }
 
-function collectClassicCards(): HTMLElement[] {
+function collectCards(context: JobListContext): HTMLElement[] {
+  if (context.layout === 'ai') {
+    return (Array.from(context.root.children) as HTMLElement[]).filter(
+      (element) =>
+        element.tagName !== 'HR' && element.querySelector(AI_CARD_MARKER),
+    );
+  }
+
   return Array.from(
-    document.querySelectorAll<HTMLElement>(CLASSIC_CARD_SELECTOR),
+    context.root.querySelectorAll<HTMLElement>(CLASSIC_CARD_SELECTOR),
   );
-}
-
-function collectAiCards(): HTMLElement[] {
-  const list = document.querySelector<HTMLElement>(AI_LIST_SELECTOR);
-  if (!list) return [];
-
-  return (Array.from(list.children) as HTMLElement[]).filter(
-    (el) => el.tagName !== 'HR' && el.querySelector(AI_CARD_MARKER),
-  );
-}
-
-function getCards(isAiSearch: boolean): HTMLElement[] {
-  return isAiSearch ? collectAiCards() : collectClassicCards();
 }
 
 /** Hides the <hr> separator after each hidden card to avoid stacking dividers between visible cards. */
-function normalizeAiHr() {
-  const list = document.querySelector<HTMLElement>(AI_LIST_SELECTOR);
-  if (!list) return;
-
+function normalizeAiHr(list: HTMLElement) {
   for (const el of Array.from(list.children)) {
     if (el.tagName !== 'HR') continue;
     const prev = el.previousElementSibling as HTMLElement | null;
@@ -117,14 +123,11 @@ function normalizeAiHr() {
 }
 
 export function applyFilters() {
-  const {
-    activeFilters,
-    settings,
-    actions,
-    isAiSearchPage: isAiSearch,
-  } = useAppStore.getState();
+  const { activeFilters, settings, actions } = useAppStore.getState();
 
-  const cards = getCards(isAiSearch);
+  const jobList = resolveJobList();
+  const isAi = jobList?.layout === 'ai';
+  const cards = jobList ? collectCards(jobList) : [];
 
   const blockedCompanies = settings.blockedCompanies
     .map((company) => normalizeText(company).toLowerCase())
@@ -138,7 +141,7 @@ export function applyFilters() {
 
   for (const el of cards) {
     const text = (el.textContent ?? '').toLowerCase();
-    const meta = isAiSearch ? extractAiMeta(el) : extractClassicMeta(el);
+    const meta = isAi ? extractAiMeta(el) : extractClassicMeta(el);
     const title = meta.title.toLowerCase();
     const company = meta.company.toLowerCase();
 
@@ -148,7 +151,7 @@ export function applyFilters() {
       applied: activeFilters.applied && text.includes('applied'),
       dismissed:
         activeFilters.dismissed &&
-        (isAiSearch ? isAiDismissed(el) : isClassicDismissed(el)),
+        (isAi ? isAiDismissed(el) : isClassicDismissed(el)),
       companies:
         activeFilters.companies &&
         company.length > 0 &&
@@ -168,8 +171,10 @@ export function applyFilters() {
     if (meta.company) visibleCompanies.add(meta.company);
   }
 
-  if (isAiSearch) normalizeAiHr();
+  if (isAi) normalizeAiHr(jobList.root);
 
   actions.setFilterCounts(counts);
   actions.setVisibleCompanies(Array.from(visibleCompanies).sort());
+
+  console.log('applyFilters', { total: cards.length, ...counts });
 }

@@ -15,7 +15,7 @@ const SEMANTIC_DESCRIPTION_SELECTOR = '[id^="JobDetails_AboutTheJob_"]';
 export const COMPANY_ANCHOR_SELECTOR = `${CLASSIC_COMPANY_SELECTOR}, ${SEMANTIC_COMPANY_ANCHOR_SELECTOR}`;
 
 export interface JobDetailsContext {
-  layout: 'classic' | 'semantic';
+  layout: 'classic' | 'ai';
   root: HTMLElement;
 }
 
@@ -28,7 +28,7 @@ export function resolveJobDetails(): JobDetailsContext | null {
   const semanticRoot = document.querySelector<HTMLElement>(
     SEMANTIC_DETAILS_SELECTOR,
   );
-  if (semanticRoot) return { layout: 'semantic', root: semanticRoot };
+  if (semanticRoot) return { layout: 'ai', root: semanticRoot };
 
   const classicRoot = document.querySelector<HTMLElement>(
     CLASSIC_DETAILS_SELECTOR,
@@ -48,17 +48,13 @@ export function findCompanyTarget(
     return anchor && companyName ? { companyName, anchor } : null;
   }
 
-  const companyLabel = context.root.querySelector<HTMLElement>(
+  const companyElement = context.root.querySelector<HTMLElement>(
     SEMANTIC_COMPANY_SELECTOR,
   );
-  const companyNameLink = companyLabel?.querySelector<HTMLElement>(
-    'a[href*="/company/"]',
-  );
-  // The inner name link can render first. Wait for the outer link so the
-  // button never mounts inside navigation.
+  // LinkedIn nests the visible company link inside a larger navigation link.
   const anchor =
-    companyLabel?.closest<HTMLElement>('a[href*="/company/"]') ?? null;
-  const companyName = normalizeText(companyNameLink?.textContent);
+    companyElement?.closest<HTMLElement>('a[href*="/company/"]') ?? null;
+  const companyName = normalizeText(companyElement?.textContent);
 
   return anchor && companyName ? { companyName, anchor } : null;
 }

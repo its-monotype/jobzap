@@ -124,11 +124,13 @@ function highlightDescription(description: HTMLElement): void {
   }
 }
 
-export function setupDescriptionHighlights(
-  ctx: ContentScriptContext,
-  isActivePage: (url: string) => boolean,
-): void {
-  if (!CSS.highlights || typeof Highlight === 'undefined') return;
+export function createDescriptionHighlights(ctx: ContentScriptContext) {
+  if (!CSS.highlights || typeof Highlight === 'undefined') {
+    return {
+      start: () => undefined,
+      stop: () => undefined,
+    };
+  }
 
   let description: HTMLElement | null = null;
   let active = false;
@@ -191,21 +193,10 @@ export function setupDescriptionHighlights(
     }
   });
 
-  ctx.addEventListener(window, 'wxt:locationchange', ({ newUrl }) => {
-    if (isActivePage(newUrl.href)) {
-      start();
-    } else {
-      stop();
-    }
-  });
-
   ctx.onInvalidated(() => {
-    observer.disconnect();
+    stop();
     unsubscribe();
-    active = false;
-    description = null;
-    clearHighlights();
   });
 
-  if (isActivePage(location.href)) start();
+  return { start, stop };
 }

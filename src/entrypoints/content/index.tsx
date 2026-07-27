@@ -7,12 +7,8 @@ import { useAppStore } from '@/store';
 import ReactDOM from 'react-dom/client';
 import { App } from './app';
 import { createCompanyBlockButton } from './company-block-button';
-import { setupDescriptionHighlights } from './description-highlights';
-import {
-  AI_LIST_SELECTOR,
-  applyFilters,
-  CLASSIC_LIST_SELECTOR,
-} from './job-list-filter';
+import { createDescriptionHighlights } from './description-highlights';
+import { applyFilters, resolveJobList } from './job-list-filter';
 
 export function isClassicSearchPage(url: string): boolean {
   const { pathname } = new URL(url);
@@ -72,9 +68,7 @@ function applyUrlModifiers(url: string): boolean {
   return false;
 }
 
-function syncFromUrl(url: string) {
-  useAppStore.getState().actions.setIsAiSearchPage(isAiSearchPage(url));
-
+function syncClassicSettingsFromUrl(url: string) {
   if (!isClassicSearchPage(url)) return;
 
   const parsed = new URL(url);
@@ -109,7 +103,7 @@ export default defineContentScript({
     // store subscriber would see a stale URL and trigger an unwanted redirect
     let currentUrl = location.href;
 
-    syncFromUrl(currentUrl);
+    syncClassicSettingsFromUrl(currentUrl);
 
     const pageStyle = document.createElement('style');
     pageStyle.id = 'jz-style';
@@ -141,15 +135,13 @@ export default defineContentScript({
     const companyBlockButton = createCompanyBlockButton(ctx);
     companyBlockButton.autoMount();
 
-    setupDescriptionHighlights(ctx, isJobSearchPage);
+    const descriptionHighlights = createDescriptionHighlights(ctx);
 
     let listObserver: MutationObserver | null = null;
 
     const observeJobList = () => {
       listObserver?.disconnect();
-      const jobList =
-        document.querySelector(CLASSIC_LIST_SELECTOR) ??
-        document.querySelector(AI_LIST_SELECTOR);
+      const jobList = resolveJobList()?.root;
 
       if (!jobList) {
         listObserver = null;
@@ -191,13 +183,15 @@ export default defineContentScript({
       if (!isJobSearchPage(currentUrl)) {
         listObserver?.disconnect();
         listObserver = null;
+        descriptionHighlights.stop();
         ui.remove();
         return;
       }
 
-      syncFromUrl(currentUrl);
+      syncClassicSettingsFromUrl(currentUrl);
       if (applyUrlModifiers(currentUrl)) return; // page will reload
       if (!ui.mounted) ui.mount();
+      descriptionHighlights.start();
       applyFilters();
       observeJobList();
     });
@@ -221,6 +215,7 @@ export default defineContentScript({
     if (isJobSearchPage(currentUrl)) {
       if (applyUrlModifiers(currentUrl)) return; // page will reload
       ui.mount();
+      descriptionHighlights.start();
       applyFilters();
       observeJobList();
     }

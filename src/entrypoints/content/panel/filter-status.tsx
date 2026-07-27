@@ -1,12 +1,11 @@
 import { cn } from '@/lib/utils';
 import { useActiveFilters } from '@/settings-store';
-import { useFilterCounts } from '../filter-store';
+import { useHiddenCount } from '../filter-store';
 
 export function FilterStatus() {
   const activeFilters = useActiveFilters();
   const isFiltering = Object.values(activeFilters).some((v) => v);
-  const counts = useFilterCounts();
-  const hiddenCount = Object.values(counts).reduce((a, b) => a + b, 0);
+  const hiddenCount = useHiddenCount();
 
   return (
     <div className="space-y-2 rounded-lg border px-3 py-2">

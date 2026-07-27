@@ -140,6 +140,7 @@ export function applyFilters(jobList: JobListContext | null) {
 
   const counts: Partial<Record<FilterId, number>> = {};
   const jobListCompanies = new Set<string>();
+  let hiddenCount = 0;
 
   for (const el of cards) {
     const text = (el.textContent ?? '').toLowerCase();
@@ -164,7 +165,9 @@ export function applyFilters(jobList: JobListContext | null) {
         excludedKeywords.some((k) => title.includes(k)),
     };
 
-    el.classList.toggle(HIDE_CLASS, Object.values(matches).some(Boolean));
+    const hidden = Object.values(matches).some(Boolean);
+    el.classList.toggle(HIDE_CLASS, hidden);
+    if (hidden) hiddenCount += 1;
 
     for (const [id, match] of Object.entries(matches)) {
       if (match) counts[id as FilterId] = (counts[id as FilterId] ?? 0) + 1;
@@ -177,8 +180,13 @@ export function applyFilters(jobList: JobListContext | null) {
 
   useFilterStore.getState().setResults({
     counts,
+    hiddenCount,
     jobListCompanies: Array.from(jobListCompanies).sort(),
   });
 
-  console.log('applyFilters', { total: cards.length, ...counts });
+  console.log('applyFilters', {
+    total: cards.length,
+    hidden: hiddenCount,
+    ...counts,
+  });
 }

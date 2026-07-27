@@ -99,7 +99,7 @@ export function PostedWithin() {
 
   return (
     <Field>
-      <FieldLabel>Posted Within</FieldLabel>
+      <FieldLabel className="font-normal">Posted within</FieldLabel>
 
       <div className="flex gap-2">
         <Input

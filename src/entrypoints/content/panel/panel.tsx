@@ -39,7 +39,7 @@ export function Panel() {
       <div className="space-y-4 overflow-y-auto p-4">
         <PostedWithin />
 
-        <SettingRow label="Default to Most Recent">
+        <SettingRow label="Default to most recent">
           <Switch
             checked={settings.defaultToRecentSort}
             onCheckedChange={(checked) =>

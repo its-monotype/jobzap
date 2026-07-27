@@ -3,9 +3,9 @@ import {
   useActions,
   useActiveFilters,
   useEnabledFilters,
-  useFilterCounts,
-} from '@/store';
+} from '@/settings-store';
 import { FilterPill } from './filter-pill';
+import { useFilterCounts } from './filter-store';
 
 export function FilterPills() {
   const enabledFilters = useEnabledFilters();

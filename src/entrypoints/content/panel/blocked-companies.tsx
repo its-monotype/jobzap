@@ -1,11 +1,12 @@
 import { Switch } from '@/components/ui/switch';
 import { TagsInput } from '@/components/ui/tags-input';
-import { useActions, useSettings, useVisibleCompanies } from '@/store';
+import { useActions, useSettings } from '@/settings-store';
+import { useJobListCompanies } from '../filter-store';
 
 export function BlockedCompanies() {
   const settings = useSettings();
   const actions = useActions();
-  const visibleCompanies = useVisibleCompanies();
+  const jobListCompanies = useJobListCompanies();
 
   const blockedCompanies = settings.blockedCompanies;
   const enabled = settings.enabledFilters.companies;
@@ -33,7 +34,7 @@ export function BlockedCompanies() {
             actions.setBlockedCompanies([]);
           }
         }}
-        suggestions={visibleCompanies}
+        suggestions={jobListCompanies}
         placeholder="Add company..."
       />
     </div>

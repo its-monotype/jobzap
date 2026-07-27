@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
-import { useActiveFilters, useFilterCounts } from '@/store';
+import { useActiveFilters } from '@/settings-store';
+import { useFilterCounts } from '../filter-store';
 
 export function FilterStatus() {
   const activeFilters = useActiveFilters();

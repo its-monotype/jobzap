@@ -1,6 +1,7 @@
 import type { FilterId } from '@/constants';
 import { normalizeText } from '@/lib/utils';
-import { useAppStore } from '@/store';
+import { useSettingsStore } from '@/settings-store';
+import { useFilterStore } from './filter-store';
 
 const HIDE_CLASS = 'jz-hidden';
 
@@ -125,7 +126,7 @@ function normalizeSemanticHr(list: HTMLElement) {
 }
 
 export function applyFilters() {
-  const { activeFilters, settings, actions } = useAppStore.getState();
+  const { activeFilters, settings } = useSettingsStore.getState();
 
   const jobList = resolveJobList();
   const isSemantic = jobList?.layout === 'semantic';
@@ -139,7 +140,7 @@ export function applyFilters() {
     .filter(Boolean);
 
   const counts: Partial<Record<FilterId, number>> = {};
-  const visibleCompanies = new Set<string>();
+  const jobListCompanies = new Set<string>();
 
   for (const el of cards) {
     const text = (el.textContent ?? '').toLowerCase();
@@ -172,13 +173,15 @@ export function applyFilters() {
       if (match) counts[id as FilterId] = (counts[id as FilterId] ?? 0) + 1;
     }
 
-    if (meta.company) visibleCompanies.add(meta.company);
+    if (meta.company) jobListCompanies.add(meta.company);
   }
 
   if (isSemantic) normalizeSemanticHr(jobList.root);
 
-  actions.setFilterCounts(counts);
-  actions.setVisibleCompanies(Array.from(visibleCompanies).sort());
+  useFilterStore.getState().setResults({
+    counts,
+    jobListCompanies: Array.from(jobListCompanies).sort(),
+  });
 
   console.log('applyFilters', { total: cards.length, ...counts });
 }

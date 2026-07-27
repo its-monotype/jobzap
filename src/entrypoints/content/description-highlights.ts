@@ -1,6 +1,6 @@
 import type { ContentScriptContext } from '#imports';
 import { normalizeText } from '@/lib/utils';
-import { useAppStore } from '@/store';
+import { useSettingsStore } from '@/settings-store';
 import { resolveJobDescription } from './job-details';
 
 const DESCRIPTION_HIGHLIGHT = 'jobzap-description-highlight';
@@ -116,7 +116,7 @@ function highlightDescription(description: HTMLElement): void {
   clearHighlights();
   if (!CSS.highlights || typeof Highlight === 'undefined') return;
 
-  const { descriptionKeywords } = useAppStore.getState().settings;
+  const { descriptionKeywords } = useSettingsStore.getState().settings;
   const ranges = findKeywordRanges(description, descriptionKeywords);
 
   if (ranges.length > 0) {
@@ -182,7 +182,7 @@ export function createDescriptionHighlights(ctx: ContentScriptContext) {
     clearHighlights();
   }
 
-  const unsubscribe = useAppStore.subscribe((state, previousState) => {
+  const unsubscribe = useSettingsStore.subscribe((state, previousState) => {
     if (!active) return;
 
     if (

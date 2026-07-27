@@ -1,26 +1,12 @@
 import { Logo } from '@/components/icons/logo';
 import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
-import { useActions, useSettings } from '@/store';
+import { useActions, useSettings } from '@/settings-store';
 import { BlockedCompanies } from './blocked-companies';
 import { DescriptionHighlights } from './description-highlights';
 import { ExcludedKeywords } from './excluded-keywords';
 import { FilterStatus } from './filter-status';
 import { PostedWithin } from './posted-within';
-
-interface SettingRowProps {
-  label: string;
-  children: React.ReactNode;
-}
-
-function SettingRow({ label, children }: SettingRowProps) {
-  return (
-    <div className="flex items-center justify-between">
-      <div className="text-sm">{label}</div>
-      {children}
-    </div>
-  );
-}
 
 export function Panel() {
   const settings = useSettings();
@@ -110,6 +96,20 @@ export function Panel() {
           Feedback
         </a>
       </div>
+    </div>
+  );
+}
+
+interface SettingRowProps {
+  label: string;
+  children: React.ReactNode;
+}
+
+function SettingRow({ label, children }: SettingRowProps) {
+  return (
+    <div className="flex items-center justify-between">
+      <div className="text-sm">{label}</div>
+      {children}
     </div>
   );
 }

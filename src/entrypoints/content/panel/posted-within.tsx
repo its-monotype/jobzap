@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useActions, useAppStore } from '@/store';
+import { useActions, useSettingsStore } from '@/settings-store';
 
 type Unit = 'minutes' | 'hours' | 'days';
 
@@ -58,7 +58,7 @@ function deriveInputValue(minutes: number | null, unit: Unit): string {
 }
 
 export function PostedWithin() {
-  const postedWithin = useAppStore((state) => state.settings.postedWithin);
+  const postedWithin = useSettingsStore((state) => state.settings.postedWithin);
   const { setPostedWithin } = useActions();
 
   const [unit, setUnit] = useState<Unit>(() => deriveUnit(postedWithin));

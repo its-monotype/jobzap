@@ -5,7 +5,7 @@ import {
   persist,
   type StateStorage,
 } from 'zustand/middleware';
-import { useShallow } from 'zustand/shallow';
+import { useShallow } from 'zustand/react/shallow';
 import type { FilterId } from './constants';
 import { normalizeText } from './lib/utils';
 
@@ -30,12 +30,9 @@ interface Settings {
   defaultToRecentSort: boolean;
 }
 
-interface AppStore {
+interface SettingsStore {
   settings: Settings;
   activeFilters: Record<FilterId, boolean>;
-  filterCounts: Partial<Record<FilterId, number>>;
-  visibleCompanies: string[];
-  panelOpen: boolean;
   actions: {
     setFilterEnabled: (id: FilterId, enabled: boolean) => void;
     setFilterActive: (id: FilterId, active: boolean) => void;
@@ -49,11 +46,6 @@ interface AppStore {
 
     setPostedWithin: (value: number | null) => void;
     setDefaultToRecentSort: (value: boolean) => void;
-
-    setFilterCounts: (counts: Partial<Record<FilterId, number>>) => void;
-
-    setVisibleCompanies: (companies: string[]) => void;
-    togglePanelOpen: () => void;
   };
 }
 
@@ -85,16 +77,13 @@ const defaultSettings: Settings = {
   defaultToRecentSort: false,
 };
 
-export const useAppStore = create<AppStore>()(
+export const useSettingsStore = create<SettingsStore>()(
   persist(
     (set) => ({
       settings: defaultSettings,
       activeFilters: {
         ...defaultSettings.enabledFilters,
       },
-      filterCounts: {},
-      visibleCompanies: [],
-      panelOpen: false,
       actions: {
         setFilterEnabled: (id, enabled) =>
           set((s) => ({
@@ -176,11 +165,6 @@ export const useAppStore = create<AppStore>()(
           set((s) => ({ settings: { ...s.settings, postedWithin } })),
         setDefaultToRecentSort: (defaultToRecentSort) =>
           set((s) => ({ settings: { ...s.settings, defaultToRecentSort } })),
-
-        setFilterCounts: (counts) => set({ filterCounts: counts }),
-
-        setVisibleCompanies: (visibleCompanies) => set({ visibleCompanies }),
-        togglePanelOpen: () => set((s) => ({ panelOpen: !s.panelOpen })),
       },
     }),
     {
@@ -191,7 +175,7 @@ export const useAppStore = create<AppStore>()(
       }),
       merge: (persistedState, currentState) => {
         const persisted = (persistedState ?? {}) as Partial<
-          Pick<AppStore, 'settings' | 'activeFilters'>
+          Pick<SettingsStore, 'settings' | 'activeFilters'>
         >;
 
         return {
@@ -216,17 +200,13 @@ export const useAppStore = create<AppStore>()(
 );
 
 storage.watch<string>('sync:jobzap', () => {
-  void useAppStore.persist.rehydrate();
+  void useSettingsStore.persist.rehydrate();
 });
 
-export const useActions = () => useAppStore((s) => s.actions);
-export const useSettings = () => useAppStore(useShallow((s) => s.settings));
+export const useActions = () => useSettingsStore((s) => s.actions);
+export const useSettings = () =>
+  useSettingsStore(useShallow((s) => s.settings));
 export const useEnabledFilters = () =>
-  useAppStore(useShallow((s) => s.settings.enabledFilters));
+  useSettingsStore(useShallow((s) => s.settings.enabledFilters));
 export const useActiveFilters = () =>
-  useAppStore(useShallow((s) => s.activeFilters));
-export const useFilterCounts = () =>
-  useAppStore(useShallow((s) => s.filterCounts));
-export const useVisibleCompanies = () =>
-  useAppStore(useShallow((s) => s.visibleCompanies));
-export const usePanelOpen = () => useAppStore((s) => s.panelOpen);
+  useSettingsStore(useShallow((s) => s.activeFilters));

@@ -1,5 +1,5 @@
 import { createIntegratedUi, type ContentScriptContext } from '#imports';
-import { isCompanyBlocked, useAppStore } from '@/store';
+import { isCompanyBlocked, useSettingsStore } from '@/settings-store';
 import {
   COMPANY_ANCHOR_SELECTOR,
   findCompanyTarget,
@@ -17,7 +17,7 @@ function updateButton(button: HTMLButtonElement): void {
   const target = getCurrentTarget();
   if (!target) return;
 
-  const { blockedCompanies } = useAppStore.getState().settings;
+  const { blockedCompanies } = useSettingsStore.getState().settings;
   const blocked = isCompanyBlocked(target.companyName, blockedCompanies);
   const label = blocked ? 'Unblock company' : 'Block company';
 
@@ -32,7 +32,7 @@ function handleClick(event: MouseEvent): void {
   const target = getCurrentTarget();
   if (!target) return;
 
-  const { actions, settings } = useAppStore.getState();
+  const { actions, settings } = useSettingsStore.getState();
   if (isCompanyBlocked(target.companyName, settings.blockedCompanies)) {
     actions.unblockCompany(target.companyName);
   } else {
@@ -61,7 +61,7 @@ export function createCompanyBlockButton(ctx: ContentScriptContext) {
     },
   });
 
-  const unsubscribe = useAppStore.subscribe((state, previousState) => {
+  const unsubscribe = useSettingsStore.subscribe((state, previousState) => {
     if (
       ui.mounted &&
       state.settings.blockedCompanies !==

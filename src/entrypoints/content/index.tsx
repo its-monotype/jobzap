@@ -1,9 +1,9 @@
 import '@/globals.css';
 import pageStyles from './page-styles.css?inline';
 
-import { browser, createShadowRootUi, defineContentScript } from '#imports';
+import { createShadowRootUi, defineContentScript } from '#imports';
 import { PortalContainerProvider } from '@/contexts/portal-container';
-import { useAppStore } from '@/store';
+import { useSettingsStore } from '@/settings-store';
 import ReactDOM from 'react-dom/client';
 import { App } from './app';
 import { createCompanyBlockButton } from './company-block-button';
@@ -30,7 +30,7 @@ export function isJobSearchPage(url: string): boolean {
 }
 
 function applyPostedWithin(url: string): boolean {
-  const { postedWithin } = useAppStore.getState().settings;
+  const { postedWithin } = useSettingsStore.getState().settings;
   if (!isClassicSearchPage(url)) return false;
 
   const parsed = new URL(url);
@@ -50,7 +50,7 @@ function applyPostedWithin(url: string): boolean {
 }
 
 function applyRecentSort(url: string): boolean {
-  if (!useAppStore.getState().settings.defaultToRecentSort) return false;
+  if (!useSettingsStore.getState().settings.defaultToRecentSort) return false;
   if (!isClassicSearchPage(url)) return false;
 
   const parsed = new URL(url);
@@ -77,10 +77,12 @@ function syncClassicSettingsFromUrl(url: string) {
   if (fTPR?.startsWith('r')) {
     const seconds = Number(fTPR.slice(1));
     if (Number.isFinite(seconds) && seconds > 0) {
-      useAppStore.getState().actions.setPostedWithin(Math.round(seconds / 60));
+      useSettingsStore
+        .getState()
+        .actions.setPostedWithin(Math.round(seconds / 60));
     }
   } else if (fTPR === null) {
-    useAppStore.getState().actions.setPostedWithin(null);
+    useSettingsStore.getState().actions.setPostedWithin(null);
   }
 }
 
@@ -90,9 +92,9 @@ export default defineContentScript({
   cssInjectionMode: 'ui',
 
   async main(ctx) {
-    if (!useAppStore.persist.hasHydrated()) {
+    if (!useSettingsStore.persist.hasHydrated()) {
       await new Promise<void>((resolve) => {
-        const unsubscribe = useAppStore.persist.onFinishHydration(() => {
+        const unsubscribe = useSettingsStore.persist.onFinishHydration(() => {
           unsubscribe();
           resolve();
         });
@@ -155,7 +157,7 @@ export default defineContentScript({
       });
     };
 
-    const unsubscribeStore = useAppStore.subscribe((state, prevState) => {
+    const unsubscribeStore = useSettingsStore.subscribe((state, prevState) => {
       if (!isJobSearchPage(currentUrl)) return;
 
       if (
@@ -196,17 +198,9 @@ export default defineContentScript({
       observeJobList();
     });
 
-    const handleRuntimeMessage = (message: Record<string, unknown>) => {
-      if (message.type === 'TOGGLE_PANEL') {
-        useAppStore.getState().actions.togglePanelOpen();
-      }
-    };
-    browser.runtime.onMessage.addListener(handleRuntimeMessage);
-
     ctx.onInvalidated(() => {
       companyBlockButton.remove();
       unsubscribeStore();
-      browser.runtime.onMessage.removeListener(handleRuntimeMessage);
       listObserver?.disconnect();
       listObserver = null;
       pageStyle.remove();

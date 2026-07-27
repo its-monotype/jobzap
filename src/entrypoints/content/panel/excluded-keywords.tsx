@@ -1,6 +1,6 @@
 import { Switch } from '@/components/ui/switch';
 import { TagsInput } from '@/components/ui/tags-input';
-import { useActions, useSettings } from '@/store';
+import { useActions, useSettings } from '@/settings-store';
 
 export function ExcludedKeywords() {
   const settings = useSettings();

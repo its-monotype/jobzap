@@ -15,7 +15,7 @@ const SEMANTIC_DESCRIPTION_SELECTOR = '[id^="JobDetails_AboutTheJob_"]';
 export const COMPANY_ANCHOR_SELECTOR = `${CLASSIC_COMPANY_SELECTOR}, ${SEMANTIC_COMPANY_ANCHOR_SELECTOR}`;
 
 export interface JobDetailsContext {
-  layout: 'classic' | 'ai';
+  layout: 'classic' | 'semantic';
   root: HTMLElement;
 }
 
@@ -28,7 +28,7 @@ export function resolveJobDetails(): JobDetailsContext | null {
   const semanticRoot = document.querySelector<HTMLElement>(
     SEMANTIC_DETAILS_SELECTOR,
   );
-  if (semanticRoot) return { layout: 'ai', root: semanticRoot };
+  if (semanticRoot) return { layout: 'semantic', root: semanticRoot };
 
   const classicRoot = document.querySelector<HTMLElement>(
     CLASSIC_DETAILS_SELECTOR,

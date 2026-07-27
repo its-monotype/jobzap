@@ -10,17 +10,19 @@ const CLASSIC_CARD_SELECTOR = 'li[data-occludable-job-id]';
 const DISMISS_BTN = 'button[aria-label^="Dismiss "][aria-label$=" job"]';
 const DISMISSED_UNDO_BTN = 'button[aria-label$=" job is dismissed, undo"]'; // present on dismissed cards of both types
 
-const AI_LIST_SELECTOR = '[componentkey="SearchResultsMainContent"]';
-const AI_CARD_MARKER = `${DISMISS_BTN}, ${DISMISSED_UNDO_BTN}`;
+const SEMANTIC_LIST_SELECTOR = '[componentkey="SearchResultsMainContent"]';
+const SEMANTIC_CARD_MARKER = `${DISMISS_BTN}, ${DISMISSED_UNDO_BTN}`;
 
 interface JobListContext {
-  layout: 'classic' | 'ai';
+  layout: 'classic' | 'semantic';
   root: HTMLElement;
 }
 
 export function resolveJobList(): JobListContext | null {
-  const aiRoot = document.querySelector<HTMLElement>(AI_LIST_SELECTOR);
-  if (aiRoot) return { layout: 'ai', root: aiRoot };
+  const semanticRoot = document.querySelector<HTMLElement>(
+    SEMANTIC_LIST_SELECTOR,
+  );
+  if (semanticRoot) return { layout: 'semantic', root: semanticRoot };
 
   const classicRoot = document.querySelector<HTMLElement>(
     CLASSIC_LIST_SELECTOR,
@@ -61,7 +63,7 @@ function extractClassicMeta(card: HTMLElement) {
   };
 }
 
-function extractAiMeta(card: HTMLElement) {
+function extractSemanticMeta(card: HTMLElement) {
   // classes are hashed at build time
   // aria-labels on action buttons are screen-reader requirements, stable across deploys
   const dismissLabel = getAttr(card, DISMISS_BTN, 'aria-label');
@@ -92,15 +94,15 @@ function isClassicDismissed(card: HTMLElement): boolean {
   );
 }
 
-function isAiDismissed(card: HTMLElement): boolean {
+function isSemanticDismissed(card: HTMLElement): boolean {
   return !!card.querySelector(DISMISSED_UNDO_BTN);
 }
 
 function collectCards(context: JobListContext): HTMLElement[] {
-  if (context.layout === 'ai') {
+  if (context.layout === 'semantic') {
     return (Array.from(context.root.children) as HTMLElement[]).filter(
       (element) =>
-        element.tagName !== 'HR' && element.querySelector(AI_CARD_MARKER),
+        element.tagName !== 'HR' && element.querySelector(SEMANTIC_CARD_MARKER),
     );
   }
 
@@ -110,7 +112,7 @@ function collectCards(context: JobListContext): HTMLElement[] {
 }
 
 /** Hides the <hr> separator after each hidden card to avoid stacking dividers between visible cards. */
-function normalizeAiHr(list: HTMLElement) {
+function normalizeSemanticHr(list: HTMLElement) {
   for (const el of Array.from(list.children)) {
     if (el.tagName !== 'HR') continue;
     const prev = el.previousElementSibling as HTMLElement | null;
@@ -126,7 +128,7 @@ export function applyFilters() {
   const { activeFilters, settings, actions } = useAppStore.getState();
 
   const jobList = resolveJobList();
-  const isAi = jobList?.layout === 'ai';
+  const isSemantic = jobList?.layout === 'semantic';
   const cards = jobList ? collectCards(jobList) : [];
 
   const blockedCompanies = settings.blockedCompanies
@@ -141,7 +143,9 @@ export function applyFilters() {
 
   for (const el of cards) {
     const text = (el.textContent ?? '').toLowerCase();
-    const meta = isAi ? extractAiMeta(el) : extractClassicMeta(el);
+    const meta = isSemantic
+      ? extractSemanticMeta(el)
+      : extractClassicMeta(el);
     const title = meta.title.toLowerCase();
     const company = meta.company.toLowerCase();
 
@@ -151,7 +155,7 @@ export function applyFilters() {
       applied: activeFilters.applied && text.includes('applied'),
       dismissed:
         activeFilters.dismissed &&
-        (isAi ? isAiDismissed(el) : isClassicDismissed(el)),
+        (isSemantic ? isSemanticDismissed(el) : isClassicDismissed(el)),
       companies:
         activeFilters.companies &&
         company.length > 0 &&
@@ -171,7 +175,7 @@ export function applyFilters() {
     if (meta.company) visibleCompanies.add(meta.company);
   }
 
-  if (isAi) normalizeAiHr(jobList.root);
+  if (isSemantic) normalizeSemanticHr(jobList.root);
 
   actions.setFilterCounts(counts);
   actions.setVisibleCompanies(Array.from(visibleCompanies).sort());

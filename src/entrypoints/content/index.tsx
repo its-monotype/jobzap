@@ -18,7 +18,7 @@ export function isClassicSearchPage(url: string): boolean {
   );
 }
 
-export function isAiSearchPage(url: string): boolean {
+export function isSemanticSearchPage(url: string): boolean {
   const { pathname, searchParams } = new URL(url);
   return (
     pathname.startsWith('/jobs/search-results/') && searchParams.has('keywords')
@@ -26,7 +26,7 @@ export function isAiSearchPage(url: string): boolean {
 }
 
 export function isJobSearchPage(url: string): boolean {
-  return isClassicSearchPage(url) || isAiSearchPage(url);
+  return isClassicSearchPage(url) || isSemanticSearchPage(url);
 }
 
 function applyPostedWithin(url: string): boolean {

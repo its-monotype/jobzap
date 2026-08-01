@@ -34,12 +34,16 @@ Hide jobs matching any combination of:
 - Applied
 - Dismissed
 - Specific companies
-- Custom keywords
+- Title keywords
 
 ### Control search results
 
 - Default to most recent sort
 - Filter by any date range (e.g. last 3 days)
+
+### Review jobs faster
+
+- Highlight words and phrases in job descriptions
 
 ### Real-time feedback
 

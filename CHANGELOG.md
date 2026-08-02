@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.2.0](https://github.com/its-monotype/jobzap/compare/jobzap-v1.1.0...jobzap-v1.2.0) (2026-08-01)
+
+
+### Features
+
+* highlight keywords in job descriptions ([4069cb6](https://github.com/its-monotype/jobzap/commit/4069cb6d56e74670643e963a3d15bf531580415a))
+* inline company block button in job details pane ([9558797](https://github.com/its-monotype/jobzap/commit/95587978a69125e356adf80f533569700a478e19))
+
+
+### Bug Fixes
+
+* **a11y:** describe interactive controls ([b58ed71](https://github.com/its-monotype/jobzap/commit/b58ed7180818c4b072bb180d4fc33ed35fd339f5))
+* count hidden jobs without duplicates ([18be18e](https://github.com/its-monotype/jobzap/commit/18be18e69af8ac715a14b6b447562541721b2c53))
+* **ui:** align settings label typography ([e7e700d](https://github.com/its-monotype/jobzap/commit/e7e700d1df3f4b6869f35685573a723375118086))
+
 ## [1.1.0](https://github.com/its-monotype/jobzap/compare/jobzap-v1.0.0...jobzap-v1.1.0) (2026-07-16)
 
 

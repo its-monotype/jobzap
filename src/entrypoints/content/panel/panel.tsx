@@ -7,6 +7,7 @@ import { DescriptionHighlights } from './description-highlights';
 import { ExcludedKeywords } from './excluded-keywords';
 import { FilterStatus } from './filter-status';
 import { PostedWithin } from './posted-within';
+import { PanelActionsMenu } from './panel-actions-menu';
 
 export function Panel() {
   const settings = useSettings();
@@ -15,9 +16,12 @@ export function Panel() {
   return (
     <div className="flex max-h-[calc(100vh-140px)] w-80 flex-col overflow-hidden rounded-lg border bg-background shadow-lg">
       <div className="flex flex-col gap-2 border-b p-4">
-        <div className="flex items-center gap-1.5">
-          <Logo className="size-6" />
-          <span className="text-lg font-semibold">JobZap</span>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5">
+            <Logo className="size-6" />
+            <span className="text-lg font-semibold">JobZap</span>
+          </div>
+          <PanelActionsMenu />
         </div>
         <FilterStatus />
       </div>
@@ -88,7 +92,7 @@ export function Panel() {
         >
           GitHub
         </a>
-        <span>·</span>
+        <span aria-hidden>·</span>
         <a
           href="mailto:hello@jobzap.app"
           className="transition-colors hover:text-foreground"

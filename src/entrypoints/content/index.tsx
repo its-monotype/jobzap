@@ -1,7 +1,11 @@
 import '@/globals.css';
 import pageStyles from './page-styles.css?inline';
 
-import { createShadowRootUi, defineContentScript } from '#imports';
+import {
+  createShadowRootUi,
+  defineContentScript,
+  MatchPattern,
+} from '#imports';
 import { PortalContainerProvider } from '@/contexts/portal-container';
 import { useSettingsStore } from '@/settings-store';
 import ReactDOM from 'react-dom/client';
@@ -11,6 +15,9 @@ import { createCompanyBlockButton } from './company-block-button';
 import { updateDescriptionHighlights } from './description-highlights';
 import { resolveJobDetails } from './job-details';
 import { applyFilters, resolveJobList } from './job-list-filter';
+
+const LINKEDIN_MATCH_PATTERN = 'https://www.linkedin.com/*';
+const linkedinPattern = new MatchPattern(LINKEDIN_MATCH_PATTERN);
 
 function isClassicSearchPage(url: string): boolean {
   const { pathname } = new URL(url);
@@ -91,7 +98,7 @@ function syncClassicSettingsFromUrl(url: string) {
 }
 
 export default defineContentScript({
-  matches: ['https://www.linkedin.com/*'],
+  matches: [LINKEDIN_MATCH_PATTERN],
   runAt: 'document_idle',
   cssInjectionMode: 'ui',
 
@@ -233,6 +240,8 @@ export default defineContentScript({
     });
 
     ctx.addEventListener(window, 'wxt:locationchange', ({ newUrl }) => {
+      if (!linkedinPattern.includes(newUrl)) return;
+
       currentUrl = newUrl.href;
 
       if (!isJobSearchPage(currentUrl)) {

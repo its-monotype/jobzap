@@ -8,6 +8,12 @@ import {
 import { useShallow } from 'zustand/react/shallow';
 import type { FilterId } from './constants';
 import { normalizeText } from './lib/utils';
+import {
+  migrateSettingsState,
+  type PersistedSettingsState,
+  type Settings,
+  SETTINGS_SCHEMA_VERSION,
+} from './settings-schema';
 
 export function isCompanyBlocked(
   companyName: string,
@@ -21,18 +27,7 @@ export function isCompanyBlocked(
   });
 }
 
-interface Settings {
-  enabledFilters: Record<FilterId, boolean>;
-  blockedCompanies: string[];
-  excludedKeywords: string[];
-  descriptionKeywords: string[];
-  postedWithin: number | null;
-  defaultToRecentSort: boolean;
-}
-
-interface SettingsStore {
-  settings: Settings;
-  activeFilters: Record<FilterId, boolean>;
+interface SettingsStore extends PersistedSettingsState {
   actions: {
     setFilterEnabled: (id: FilterId, enabled: boolean) => void;
     setFilterActive: (id: FilterId, active: boolean) => void;
@@ -169,6 +164,8 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: 'jobzap',
+      version: SETTINGS_SCHEMA_VERSION,
+      migrate: migrateSettingsState,
       partialize: (state) => ({
         settings: state.settings,
         activeFilters: state.activeFilters,

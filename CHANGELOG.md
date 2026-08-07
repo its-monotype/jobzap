@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/its-monotype/jobzap/compare/jobzap-v1.2.0...jobzap-v1.3.0) (2026-08-07)
+
+
+### Features
+
+* add settings backup import and export ([b76e1fe](https://github.com/its-monotype/jobzap/commit/b76e1febcf952745fd24e8bcd7838b1fed46b328))
+
 ## [1.2.0](https://github.com/its-monotype/jobzap/compare/jobzap-v1.1.0...jobzap-v1.2.0) (2026-08-01)
 
 

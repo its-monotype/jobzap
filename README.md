@@ -50,6 +50,8 @@ Hide jobs matching any combination of:
 - Floating pills show how many jobs are hidden
 - Toggle filters on/off instantly while browsing
 
+You can also export and import your settings to keep a backup or move between browsers.
+
 ## Installation
 
 **[Install from Chrome Web Store](https://chromewebstore.google.com/detail/hbegbmijckoknpbcdmglobgegmeoinib)**

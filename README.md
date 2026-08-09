@@ -50,7 +50,7 @@ Hide jobs matching any combination of:
 - Floating pills show how many jobs are hidden
 - Toggle filters on/off instantly while browsing
 
-You can also export and import your settings to keep a backup or move between browsers.
+You can also export and import your settings to keep a backup or move between browsers. The export is plain JSON, so you can ask an AI assistant to make changes based on your preferences, then import it back.
 
 ## Installation
 

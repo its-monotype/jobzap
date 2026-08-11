@@ -38,8 +38,8 @@ Hide jobs matching any combination of:
 
 ### Control search results
 
-- Default to most recent sort
 - Filter by any date range (e.g. last 3 days)
+- Default to most recent sort (classic search only)
 
 ### Review jobs faster
 

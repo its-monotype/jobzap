@@ -36,7 +36,9 @@ function applyPostedWithin(url: string): boolean {
 
 function applyRecentSort(url: string): boolean {
   const { defaultToRecentSort } = useSettingsStore.getState().settings;
-  const nextUrl = getRecentSortUrl(url, defaultToRecentSort);
+  if (!defaultToRecentSort) return false;
+
+  const nextUrl = getRecentSortUrl(url);
   if (!nextUrl) return false;
 
   location.replace(nextUrl);

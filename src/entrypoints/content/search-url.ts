@@ -51,11 +51,8 @@ export function getPostedWithinUrl(
   return parsed.href;
 }
 
-export function getRecentSortUrl(
-  url: string,
-  defaultToRecentSort: boolean,
-): string | null {
-  if (!defaultToRecentSort || !isClassicSearchPage(url)) return null;
+export function getRecentSortUrl(url: string): string | null {
+  if (!isClassicSearchPage(url)) return null;
 
   const parsed = new URL(url);
   if (parsed.searchParams.has('sortBy')) return null;

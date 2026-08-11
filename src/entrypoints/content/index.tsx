@@ -15,58 +15,31 @@ import { createCompanyBlockButton } from './company-block-button';
 import { updateDescriptionHighlights } from './description-highlights';
 import { resolveJobDetails } from './job-details';
 import { applyFilters, resolveJobList } from './job-list-filter';
+import {
+  getPostedWithinFromUrl,
+  getPostedWithinUrl,
+  getRecentSortUrl,
+  isJobSearchPage,
+} from './search-url';
 
 const LINKEDIN_MATCH_PATTERN = 'https://www.linkedin.com/*';
 const linkedinPattern = new MatchPattern(LINKEDIN_MATCH_PATTERN);
 
-function isClassicSearchPage(url: string): boolean {
-  const { pathname } = new URL(url);
-  return (
-    pathname.startsWith('/jobs/search/') ||
-    pathname.startsWith('/jobs/collections/')
-  );
-}
-
-function isSemanticSearchPage(url: string): boolean {
-  const { pathname, searchParams } = new URL(url);
-  return (
-    pathname.startsWith('/jobs/search-results/') && searchParams.has('keywords')
-  );
-}
-
-function isJobSearchPage(url: string): boolean {
-  return isClassicSearchPage(url) || isSemanticSearchPage(url);
-}
-
 function applyPostedWithin(url: string): boolean {
   const { postedWithin } = useSettingsStore.getState().settings;
-  if (!isClassicSearchPage(url)) return false;
+  const nextUrl = getPostedWithinUrl(url, postedWithin);
+  if (!nextUrl) return false;
 
-  const parsed = new URL(url);
-  const expected = postedWithin ? `r${postedWithin * 60}` : null;
-  const current = parsed.searchParams.get('f_TPR');
-
-  if (current === expected) return false;
-
-  if (expected) {
-    parsed.searchParams.set('f_TPR', expected);
-  } else {
-    parsed.searchParams.delete('f_TPR');
-  }
-
-  location.replace(parsed.href);
+  location.replace(nextUrl);
   return true;
 }
 
 function applyRecentSort(url: string): boolean {
-  if (!useSettingsStore.getState().settings.defaultToRecentSort) return false;
-  if (!isClassicSearchPage(url)) return false;
+  const { defaultToRecentSort } = useSettingsStore.getState().settings;
+  const nextUrl = getRecentSortUrl(url, defaultToRecentSort);
+  if (!nextUrl) return false;
 
-  const parsed = new URL(url);
-  if (parsed.searchParams.has('sortBy')) return false;
-
-  parsed.searchParams.set('sortBy', 'DD');
-  location.replace(parsed.href);
+  location.replace(nextUrl);
   return true;
 }
 
@@ -77,23 +50,13 @@ function applyUrlModifiers(url: string): boolean {
   return false;
 }
 
-function syncClassicSettingsFromUrl(url: string) {
-  if (!isClassicSearchPage(url)) return;
+function syncPostedWithinFromUrl(url: string) {
+  const postedWithin = getPostedWithinFromUrl(url);
+  if (postedWithin === undefined) return;
 
-  const parsed = new URL(url);
-  const fTPR = parsed.searchParams.get('f_TPR');
   const { actions, settings } = useSettingsStore.getState();
-
-  if (fTPR?.startsWith('r')) {
-    const seconds = Number(fTPR.slice(1));
-    if (!Number.isFinite(seconds) || seconds <= 0) return;
-
-    const postedWithin = Math.round(seconds / 60);
-    if (settings.postedWithin !== postedWithin) {
-      actions.setPostedWithin(postedWithin);
-    }
-  } else if (fTPR === null && settings.postedWithin !== null) {
-    actions.setPostedWithin(null);
+  if (settings.postedWithin !== postedWithin) {
+    actions.setPostedWithin(postedWithin);
   }
 }
 
@@ -116,7 +79,7 @@ export default defineContentScript({
     // store subscriber would see a stale URL and trigger an unwanted redirect
     let currentUrl = location.href;
 
-    syncClassicSettingsFromUrl(currentUrl);
+    syncPostedWithinFromUrl(currentUrl);
 
     const pageStyle = document.createElement('style');
     pageStyle.id = 'jz-style';
@@ -250,7 +213,7 @@ export default defineContentScript({
         return;
       }
 
-      syncClassicSettingsFromUrl(currentUrl);
+      syncPostedWithinFromUrl(currentUrl);
       if (applyUrlModifiers(currentUrl)) return; // page will reload
       if (!panelUi.mounted) panelUi.mount();
       observePage();

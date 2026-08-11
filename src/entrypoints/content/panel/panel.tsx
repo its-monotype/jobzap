@@ -6,12 +6,14 @@ import { BlockedCompanies } from './blocked-companies';
 import { DescriptionHighlights } from './description-highlights';
 import { ExcludedKeywords } from './excluded-keywords';
 import { FilterStatus } from './filter-status';
+import { isClassicSearchPage } from '../search-url';
 import { PostedWithin } from './posted-within';
 import { PanelActionsMenu } from './panel-actions-menu';
 
 export function Panel() {
   const settings = useSettings();
   const actions = useActions();
+  const recentSortSupported = isClassicSearchPage(location.href);
 
   return (
     <div className="flex max-h-[calc(100vh-140px)] w-80 flex-col overflow-hidden rounded-lg border bg-background shadow-lg">
@@ -29,14 +31,16 @@ export function Panel() {
       <div className="space-y-4 overflow-y-auto p-4">
         <PostedWithin />
 
-        <SettingRow label="Default to most recent">
-          <Switch
-            checked={settings.defaultToRecentSort}
-            onCheckedChange={(checked) =>
-              actions.setDefaultToRecentSort(checked)
-            }
-          />
-        </SettingRow>
+        {recentSortSupported && (
+          <SettingRow label="Default to most recent">
+            <Switch
+              checked={settings.defaultToRecentSort}
+              onCheckedChange={(checked) =>
+                actions.setDefaultToRecentSort(checked)
+              }
+            />
+          </SettingRow>
+        )}
 
         <Separator />
 
@@ -111,7 +115,7 @@ interface SettingRowProps {
 
 function SettingRow({ label, children }: SettingRowProps) {
   return (
-    <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between gap-3">
       <div className="text-sm">{label}</div>
       {children}
     </div>

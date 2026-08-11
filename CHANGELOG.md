@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.1](https://github.com/its-monotype/jobzap/compare/jobzap-v1.3.0...jobzap-v1.3.1) (2026-08-11)
+
+
+### Bug Fixes
+
+* **linkedin:** adapt search settings for AI search ([1522053](https://github.com/its-monotype/jobzap/commit/15220532ecc4df0701c95d333496c143c1daa9e7))
+* **ui:** add missing pointer cursors ([a80fe0b](https://github.com/its-monotype/jobzap/commit/a80fe0b45928854b06da5e5f6c36d2f5259758c5))
+
 ## [1.3.0](https://github.com/its-monotype/jobzap/compare/jobzap-v1.2.0...jobzap-v1.3.0) (2026-08-07)
 
 

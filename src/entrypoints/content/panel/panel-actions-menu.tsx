@@ -21,7 +21,7 @@ function MenuItem(props: Menu.Item.Props) {
   return (
     <Menu.Item
       {...props}
-      className="flex min-h-8 items-center gap-2 rounded-sm px-2 text-sm outline-none select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground"
+      className="flex min-h-8 cursor-pointer items-center gap-2 rounded-sm px-2 text-sm outline-none select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground"
     />
   );
 }

@@ -78,10 +78,10 @@ export function PostedWithin() {
   }, [postedWithin]);
 
   function handleApply() {
-    const parsed = Number(inputValue);
-    if (!inputValue || !Number.isFinite(parsed) || parsed <= 0) return;
+    const minutes = Math.round(Number(inputValue) * UNIT_TO_MINUTES[unit]);
+    if (!Number.isSafeInteger(minutes) || minutes < 1) return;
 
-    setPostedWithin(Math.round(parsed * UNIT_TO_MINUTES[unit]));
+    setPostedWithin(minutes);
   }
 
   function handleClear() {

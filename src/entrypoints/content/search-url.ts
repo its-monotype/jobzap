@@ -30,9 +30,10 @@ export function parsePostedWithin(url: string): number | null | undefined {
   if (!fTPR.startsWith('r')) return undefined;
 
   const seconds = Number(fTPR.slice(1));
-  if (!Number.isFinite(seconds) || seconds <= 0) return undefined;
+  const minutes = Math.round(seconds / 60);
+  if (!Number.isSafeInteger(minutes) || minutes < 1) return undefined;
 
-  return Math.round(seconds / 60);
+  return minutes;
 }
 
 export function buildPostedWithinUrl(

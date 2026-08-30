@@ -1,9 +1,9 @@
 export function isClassicSearchPage(url: string): boolean {
-  const { pathname } = new URL(url);
-  return (
-    pathname.startsWith('/jobs/search/') ||
-    pathname.startsWith('/jobs/collections/')
-  );
+  return new URL(url).pathname.startsWith('/jobs/search/');
+}
+
+function isClassicCollectionPage(url: string): boolean {
+  return new URL(url).pathname.startsWith('/jobs/collections/');
 }
 
 function isAiSearchPage(url: string): boolean {
@@ -14,11 +14,15 @@ function isAiSearchPage(url: string): boolean {
 }
 
 export function isJobSearchPage(url: string): boolean {
-  return isClassicSearchPage(url) || isAiSearchPage(url);
+  return (
+    isClassicSearchPage(url) ||
+    isAiSearchPage(url) ||
+    isClassicCollectionPage(url)
+  );
 }
 
-export function getPostedWithinFromUrl(url: string): number | null | undefined {
-  if (!isJobSearchPage(url)) return undefined;
+export function parsePostedWithin(url: string): number | null | undefined {
+  if (!isJobSearchPage(url) || isClassicCollectionPage(url)) return undefined;
 
   const parsed = new URL(url);
   const fTPR = parsed.searchParams.get('f_TPR');
@@ -31,11 +35,11 @@ export function getPostedWithinFromUrl(url: string): number | null | undefined {
   return Math.round(seconds / 60);
 }
 
-export function getPostedWithinUrl(
+export function buildPostedWithinUrl(
   url: string,
   postedWithin: number | null,
 ): string | null {
-  if (!isJobSearchPage(url)) return null;
+  if (!isJobSearchPage(url) || isClassicCollectionPage(url)) return null;
 
   const parsed = new URL(url);
   const expectedFTPR = postedWithin === null ? null : `r${postedWithin * 60}`;
@@ -51,7 +55,7 @@ export function getPostedWithinUrl(
   return parsed.href;
 }
 
-export function getRecentSortUrl(url: string): string | null {
+export function buildRecentSortUrl(url: string): string | null {
   if (!isClassicSearchPage(url)) return null;
 
   const parsed = new URL(url);

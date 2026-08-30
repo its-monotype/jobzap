@@ -16,44 +16,36 @@ import { updateDescriptionHighlights } from './description-highlights';
 import { resolveJobDetails } from './job-details';
 import { applyFilters, resolveJobList } from './job-list-filter';
 import {
-  getPostedWithinFromUrl,
-  getPostedWithinUrl,
-  getRecentSortUrl,
+  buildPostedWithinUrl,
+  buildRecentSortUrl,
   isJobSearchPage,
+  parsePostedWithin,
 } from './search-url';
 
 const LINKEDIN_MATCH_PATTERN = 'https://www.linkedin.com/*';
 const linkedinPattern = new MatchPattern(LINKEDIN_MATCH_PATTERN);
 
-function applyPostedWithin(url: string): boolean {
-  const { postedWithin } = useSettingsStore.getState().settings;
-  const nextUrl = getPostedWithinUrl(url, postedWithin);
-  if (!nextUrl) return false;
-
-  location.replace(nextUrl);
-  return true;
-}
-
-function applyRecentSort(url: string): boolean {
-  const { defaultToRecentSort } = useSettingsStore.getState().settings;
-  if (!defaultToRecentSort) return false;
-
-  const nextUrl = getRecentSortUrl(url);
-  if (!nextUrl) return false;
-
-  location.replace(nextUrl);
-  return true;
-}
-
-/** Applies URL-based filters that trigger a page reload. Returns true if a reload was initiated. */
+/**
+ * Applies URL-based settings by replacing the current URL.
+ * Returns true if navigation was initiated.
+ */
 function applyUrlModifiers(url: string): boolean {
-  if (applyPostedWithin(url)) return true;
-  if (applyRecentSort(url)) return true;
-  return false;
+  const { postedWithin, defaultToRecentSort } =
+    useSettingsStore.getState().settings;
+
+  let nextUrl = buildPostedWithinUrl(url, postedWithin) ?? url;
+  if (defaultToRecentSort) {
+    nextUrl = buildRecentSortUrl(nextUrl) ?? nextUrl;
+  }
+
+  if (nextUrl === url) return false;
+
+  location.replace(nextUrl);
+  return true;
 }
 
-function syncPostedWithinFromUrl(url: string) {
-  const postedWithin = getPostedWithinFromUrl(url);
+function syncPostedWithin(url: string) {
+  const postedWithin = parsePostedWithin(url);
   if (postedWithin === undefined) return;
 
   const { actions, settings } = useSettingsStore.getState();
@@ -76,12 +68,6 @@ export default defineContentScript({
         });
       });
     }
-
-    // wxt:locationchange event fires before location.href updates, so the
-    // store subscriber would see a stale URL and trigger an unwanted redirect
-    let currentUrl = location.href;
-
-    syncPostedWithinFromUrl(currentUrl);
 
     const pageStyle = document.createElement('style');
     pageStyle.id = 'jz-style';
@@ -168,6 +154,8 @@ export default defineContentScript({
       updateDescriptionHighlights(null);
     };
 
+    let currentUrl = location.href;
+
     const unsubscribeStore = useSettingsStore.subscribe((state, prevState) => {
       if (!isJobSearchPage(currentUrl)) return;
 
@@ -176,8 +164,7 @@ export default defineContentScript({
         state.settings.defaultToRecentSort !==
           prevState.settings.defaultToRecentSort
       ) {
-        applyUrlModifiers(currentUrl);
-        return; // page will reload
+        if (applyUrlModifiers(currentUrl)) return; // page will reload
       }
 
       if (
@@ -215,7 +202,7 @@ export default defineContentScript({
         return;
       }
 
-      syncPostedWithinFromUrl(currentUrl);
+      syncPostedWithin(currentUrl);
       if (applyUrlModifiers(currentUrl)) return; // page will reload
       if (!panelUi.mounted) panelUi.mount();
       observePage();

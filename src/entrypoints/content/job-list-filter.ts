@@ -8,15 +8,23 @@ const HIDE_CLASS = 'jz-hidden';
 const CLASSIC_LIST_SELECTOR = '.scaffold-layout__list';
 const CLASSIC_CARD_SELECTOR = 'li[data-occludable-job-id]';
 
-const DISMISS_BTN = 'button[aria-label^="Dismiss "][aria-label$=" job"]';
-const DISMISSED_UNDO_BTN = 'button[aria-label$=" job is dismissed, undo"]'; // present on dismissed cards of both types
+const DISMISSED_UNDO_SELECTOR = 'button[aria-label$=" job is dismissed, undo"]';
 
 const SEMANTIC_LIST_SELECTOR = '[componentkey="SearchResultsMainContent"]';
-const SEMANTIC_CARD_MARKER = `${DISMISS_BTN}, ${DISMISSED_UNDO_BTN}`;
+const SEMANTIC_CARD_SELECTOR = '[componentkey^="job-card-component-ref-"]';
 
 interface JobListContext {
   layout: 'classic' | 'semantic';
   root: HTMLElement;
+}
+
+interface JobCardData {
+  title: string;
+  company: string;
+  promoted: boolean;
+  viewed: boolean;
+  applied: boolean;
+  dismissed: boolean;
 }
 
 export function resolveJobList(): JobListContext | null {
@@ -31,79 +39,55 @@ export function resolveJobList(): JobListContext | null {
   return classicRoot ? { layout: 'classic', root: classicRoot } : null;
 }
 
-/** Queries selector and returns normalized textContent, empty string if not found. */
-function getText(root: ParentNode, selector: string): string {
-  return normalizeText(root.querySelector<HTMLElement>(selector)?.textContent);
+function getText(root: ParentNode | undefined, selector: string): string {
+  return normalizeText(root?.querySelector<HTMLElement>(selector)?.textContent);
 }
 
-/** Queries selector and returns normalized attribute value, empty string if not found. */
-function getAttr(root: ParentNode, selector: string, attr: string): string {
-  return normalizeText(
-    root.querySelector<HTMLElement>(selector)?.getAttribute(attr),
+function getMetadataFlags(elements: Iterable<Element>) {
+  const values = Array.from(elements, (el) =>
+    normalizeText(el.textContent).toLowerCase(),
   );
-}
 
-function firstText(root: HTMLElement, selectors: string[]): string {
-  for (const sel of selectors) {
-    const text = getText(root, sel);
-    if (text) return text;
-  }
-  return '';
-}
-
-function extractClassicMeta(card: HTMLElement) {
   return {
-    title: firstText(card, [
-      '.artdeco-entity-lockup__title .visually-hidden',
-      '.artdeco-entity-lockup__title strong',
-    ]),
-    company: firstText(card, [
-      '.artdeco-entity-lockup__subtitle > span',
-      '.artdeco-entity-lockup__subtitle',
-    ]),
+    promoted: values.includes('promoted'),
+    viewed: values.includes('viewed'),
+    applied: values.includes('applied'),
   };
 }
 
-function extractSemanticMeta(card: HTMLElement) {
-  // classes are hashed at build time
-  // aria-labels on action buttons are screen-reader requirements, stable across deploys
-  const dismissLabel = getAttr(card, DISMISS_BTN, 'aria-label');
-  const undoLabel = getAttr(card, DISMISSED_UNDO_BTN, 'aria-label');
-
-  const title =
-    normalizeText(
-      dismissLabel.replace(/^Dismiss\s+/i, '').replace(/\s+job$/i, ''),
-    ) ||
-    normalizeText(undoLabel.replace(/\s+job is dismissed,\s*undo$/i, '')) ||
-    getText(card, 'p'); // fallback: first <p> is always the title
-
-  // p-tag order is consistently [title, company, location, ...footer] across all observed cards
-  const paras = Array.from(card.querySelectorAll<HTMLElement>('p'))
-    .map((el) => normalizeText(el.textContent))
-    .filter(Boolean);
-
+function parseClassicCard(card: HTMLElement): JobCardData {
   return {
-    title,
-    company: paras[1] !== paras[0] ? (paras[1] ?? '') : '',
+    title: getText(card, '.artdeco-entity-lockup__title [aria-hidden="true"]'),
+    company: getText(card, '.artdeco-entity-lockup__subtitle'),
+    ...getMetadataFlags(
+      card.querySelectorAll('.job-card-container__footer-item'),
+    ),
+    dismissed: !!card.querySelector(
+      `.job-card-list--is-dismissed, ${DISMISSED_UNDO_SELECTOR}`,
+    ),
   };
 }
 
-function isClassicDismissed(card: HTMLElement): boolean {
-  return (
-    !!card.querySelector('.job-card-list--is-dismissed') ||
-    !!card.querySelector(DISMISSED_UNDO_BTN)
-  );
-}
+function parseSemanticCard(card: HTMLElement): JobCardData {
+  // Semantic classes are hashed, so fields are read from stable paragraph order.
+  const paragraphs = card.querySelectorAll<HTMLElement>('p');
+  const metadataRow = paragraphs[paragraphs.length - 1]?.parentElement;
+  const metadata = metadataRow
+    ? Array.from(metadataRow.children).filter((el) => el.tagName === 'P')
+    : [];
 
-function isSemanticDismissed(card: HTMLElement): boolean {
-  return !!card.querySelector(DISMISSED_UNDO_BTN);
+  return {
+    title: getText(paragraphs[0], '[aria-hidden="true"]'),
+    company: normalizeText(paragraphs[1]?.textContent),
+    ...getMetadataFlags(metadata),
+    dismissed: !!card.querySelector(DISMISSED_UNDO_SELECTOR),
+  };
 }
 
 function collectCards(context: JobListContext): HTMLElement[] {
   if (context.layout === 'semantic') {
-    return (Array.from(context.root.children) as HTMLElement[]).filter(
-      (element) =>
-        element.tagName !== 'HR' && element.querySelector(SEMANTIC_CARD_MARKER),
+    return (Array.from(context.root.children) as HTMLElement[]).filter((el) =>
+      el.querySelector(SEMANTIC_CARD_SELECTOR),
     );
   }
 
@@ -142,19 +126,18 @@ export function applyFilters(jobList: JobListContext | null) {
   const jobListCompanies = new Set<string>();
   let hiddenCount = 0;
 
-  for (const el of cards) {
-    const text = (el.textContent ?? '').toLowerCase();
-    const meta = isSemantic ? extractSemanticMeta(el) : extractClassicMeta(el);
-    const title = meta.title.toLowerCase();
-    const company = meta.company.toLowerCase();
+  for (const card of cards) {
+    const cardData = isSemantic
+      ? parseSemanticCard(card)
+      : parseClassicCard(card);
+    const title = cardData.title.toLowerCase();
+    const company = cardData.company.toLowerCase();
 
     const matches = {
-      promoted: activeFilters.promoted && text.includes('promoted'),
-      viewed: activeFilters.viewed && text.includes('viewed'),
-      applied: activeFilters.applied && text.includes('applied'),
-      dismissed:
-        activeFilters.dismissed &&
-        (isSemantic ? isSemanticDismissed(el) : isClassicDismissed(el)),
+      promoted: activeFilters.promoted && cardData.promoted,
+      viewed: activeFilters.viewed && cardData.viewed,
+      applied: activeFilters.applied && cardData.applied,
+      dismissed: activeFilters.dismissed && cardData.dismissed,
       companies:
         activeFilters.companies &&
         company.length > 0 &&
@@ -166,14 +149,14 @@ export function applyFilters(jobList: JobListContext | null) {
     };
 
     const hidden = Object.values(matches).some(Boolean);
-    el.classList.toggle(HIDE_CLASS, hidden);
+    card.classList.toggle(HIDE_CLASS, hidden);
     if (hidden) hiddenCount += 1;
 
     for (const [id, match] of Object.entries(matches)) {
       if (match) counts[id as FilterId] = (counts[id as FilterId] ?? 0) + 1;
     }
 
-    if (meta.company) jobListCompanies.add(meta.company);
+    if (cardData.company) jobListCompanies.add(cardData.company);
   }
 
   if (isSemantic) normalizeSemanticHr(jobList.root);

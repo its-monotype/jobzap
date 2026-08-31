@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.3.2](https://github.com/its-monotype/jobzap/compare/jobzap-v1.3.1...jobzap-v1.3.2) (2026-08-31)
+
+
+### Bug Fixes
+
+* **linkedin:** ignore unrelated URL changes when syncing posted within ([8c2fa5c](https://github.com/its-monotype/jobzap/commit/8c2fa5c64312872f9518f259f6bb8ccc8f741712))
+* **linkedin:** prevent new tab loads from overwriting posted within ([79a89e5](https://github.com/its-monotype/jobzap/commit/79a89e541d05acc58afb0c9c3f9b62032249220d))
+* **settings:** reject invalid posted within values ([b8bb739](https://github.com/its-monotype/jobzap/commit/b8bb7398d6e14bd3b084db6bd58e71b33c46ce79))
+* **tags-input:** prevent unintended backspace removal ([9f9a104](https://github.com/its-monotype/jobzap/commit/9f9a1044f00bfb220c894ab86f3a5e01feb3300c))
+
 ## [1.3.1](https://github.com/its-monotype/jobzap/compare/jobzap-v1.3.0...jobzap-v1.3.1) (2026-08-11)
 
 

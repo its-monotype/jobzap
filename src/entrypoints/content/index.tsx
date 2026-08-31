@@ -44,13 +44,15 @@ function applyUrlModifiers(url: string): boolean {
   return true;
 }
 
-function syncPostedWithin(url: string) {
-  const postedWithin = parsePostedWithin(url);
-  if (postedWithin === undefined) return;
+function syncPostedWithin(oldUrl: string, newUrl: string) {
+  const oldValue = parsePostedWithin(oldUrl);
+  const newValue = parsePostedWithin(newUrl);
+  if (oldValue === undefined || newValue === undefined) return;
+  if (oldValue === newValue) return;
 
   const { actions, settings } = useSettingsStore.getState();
-  if (settings.postedWithin !== postedWithin) {
-    actions.setPostedWithin(postedWithin);
+  if (settings.postedWithin !== newValue) {
+    actions.setPostedWithin(newValue);
   }
 }
 
@@ -191,7 +193,7 @@ export default defineContentScript({
       }
     });
 
-    ctx.addEventListener(window, 'wxt:locationchange', ({ newUrl }) => {
+    ctx.addEventListener(window, 'wxt:locationchange', ({ newUrl, oldUrl }) => {
       if (!linkedinPattern.includes(newUrl)) return;
 
       currentUrl = newUrl.href;
@@ -202,7 +204,7 @@ export default defineContentScript({
         return;
       }
 
-      syncPostedWithin(currentUrl);
+      syncPostedWithin(oldUrl.href, currentUrl);
       if (applyUrlModifiers(currentUrl)) return; // page will reload
       if (!panelUi.mounted) panelUi.mount();
       observePage();

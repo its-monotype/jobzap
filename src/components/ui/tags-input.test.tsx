@@ -154,4 +154,19 @@ describe('TagsInput', () => {
     expect(screen.getByText('Acme')).toBeInTheDocument();
     expect(input).toHaveValue('');
   });
+
+  it('does not remove tags with Backspace from an empty input', async () => {
+    const { user, input, onValueChange } = setupTagsInput({
+      initialValue: ['Acme', 'Beta', 'Gamma', 'Delta'],
+    });
+
+    await user.type(input, 'draft');
+    await user.keyboard(
+      '{Backspace}{Backspace}{Backspace}{Backspace}{Backspace}{Backspace}{Backspace}',
+    );
+
+    expect(input).toHaveValue('');
+    expect(screen.getByText('Acme')).toBeInTheDocument();
+    expect(onValueChange).not.toHaveBeenCalled();
+  });
 });

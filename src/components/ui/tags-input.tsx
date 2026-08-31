@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Autocomplete } from '@base-ui/react/autocomplete';
 import { Combobox } from '@base-ui/react/combobox';
 import { Popover } from '@base-ui/react/popover';
+import type { BaseUIEvent } from '@base-ui/react/types';
 import { SearchIcon, XIcon } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 
@@ -88,8 +89,15 @@ export function TagsInput({
     setQuery('');
   }
 
-  function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+  function handleKeyDown(
+    event: BaseUIEvent<React.KeyboardEvent<HTMLInputElement>>,
+  ) {
     if (disabled || event.nativeEvent.isComposing) return;
+
+    if (event.key === 'Backspace' && event.currentTarget.value === '') {
+      event.preventBaseUIHandler();
+      return;
+    }
 
     if (event.key === 'Enter') {
       if (!highlightedItemRef.current && cleanedQuery) {

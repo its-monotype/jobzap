@@ -19,4 +19,8 @@ minimumReleaseAgeExclude:
   - eslint-plugin-react-rsc@5.18.7
   - eslint-plugin-react-web-api@5.18.7
   - eslint-plugin-react-x@5.18.7
-  - shadcn@4.20.1
+  - shadcn@4.20.1 || 4.21.0
+  - '@base-ui/react@1.8.0'
+  - '@base-ui/utils@0.4.0'
+  - eslint@10.10.0
+  - lucide-react@1.41.0

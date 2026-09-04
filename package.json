@@ -48,7 +48,7 @@
     "@wxt-dev/auto-icons": "^1.1.2",
     "@wxt-dev/module-react": "^1.2.2",
     "eslint": "^10.10.0",
-    "jsdom": "^29.1.1",
+    "jsdom": "^30.0.1",
     "lefthook": "^2.1.12",
     "postcss-rem-to-responsive-pixel": "^7.0.5",
     "prettier": "^3.9.6",

@@ -4,6 +4,19 @@ allowBuilds:
   msw: false
   sharp: true
   spawn-sync: false
-
-overrides:
-  vite@8.0.10>lightningcss: 1.33.0
+minimumReleaseAgeExclude:
+  - '@eslint-react/ast@5.18.7'
+  - '@eslint-react/core@5.18.7'
+  - '@eslint-react/eslint-plugin@5.18.7'
+  - '@eslint-react/eslint@5.18.7'
+  - '@eslint-react/jsx@5.18.7'
+  - '@eslint-react/shared@5.18.7'
+  - '@eslint-react/var@5.18.7'
+  - '@testing-library/user-event@14.6.7'
+  - eslint-plugin-react-dom@5.18.7
+  - eslint-plugin-react-jsx@5.18.7
+  - eslint-plugin-react-naming-convention@5.18.7
+  - eslint-plugin-react-rsc@5.18.7
+  - eslint-plugin-react-web-api@5.18.7
+  - eslint-plugin-react-x@5.18.7
+  - shadcn@4.20.1

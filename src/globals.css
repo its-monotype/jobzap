@@ -141,8 +141,8 @@
     @apply border-border outline-ring/50;
   }
 
-  body {
-    @apply relative z-2147483647 font-sans text-foreground;
+  :host {
+    @apply relative! z-2147483647! font-sans! text-foreground!;
   }
 
   button:not(:disabled),

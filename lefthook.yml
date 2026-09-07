@@ -1,5 +1,4 @@
 pre-commit:
-  parallel: true
   jobs:
     - name: prettier
       run: pnpm exec prettier --ignore-unknown --write {staged_files}
@@ -11,7 +10,6 @@ pre-commit:
       stage_fixed: true
 
 pre-push:
-  parallel: true
   jobs:
     - name: typecheck
       run: pnpm typecheck

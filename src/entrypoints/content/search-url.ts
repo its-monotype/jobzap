@@ -13,6 +13,10 @@ function isAiSearchPage(url: string): boolean {
   );
 }
 
+export function supportsPostedWithin(url: string): boolean {
+  return isClassicSearchPage(url) || isAiSearchPage(url);
+}
+
 export function isJobSearchPage(url: string): boolean {
   return (
     isClassicSearchPage(url) ||
@@ -22,7 +26,7 @@ export function isJobSearchPage(url: string): boolean {
 }
 
 export function parsePostedWithin(url: string): number | null | undefined {
-  if (!isJobSearchPage(url) || isClassicCollectionPage(url)) return undefined;
+  if (!supportsPostedWithin(url)) return undefined;
 
   const parsed = new URL(url);
   const fTPR = parsed.searchParams.get('f_TPR');
@@ -40,7 +44,7 @@ export function buildPostedWithinUrl(
   url: string,
   postedWithin: number | null,
 ): string | null {
-  if (!isJobSearchPage(url) || isClassicCollectionPage(url)) return null;
+  if (!supportsPostedWithin(url)) return null;
 
   const parsed = new URL(url);
   const expectedFTPR = postedWithin === null ? null : `r${postedWithin * 60}`;

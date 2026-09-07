@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Field, FieldLabel } from '@/components/ui/field';
@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useActions, useSettingsStore } from '@/settings-store';
+import { buildPostedWithinUrl, parsePostedWithin } from '../search-url';
 
 type Unit = 'minutes' | 'hours' | 'days';
 
@@ -58,34 +58,32 @@ function deriveInputValue(minutes: number | null, unit: Unit): string {
 }
 
 export function PostedWithin() {
-  const postedWithin = useSettingsStore((state) => state.settings.postedWithin);
-  const { setPostedWithin } = useActions();
+  const postedWithin = parsePostedWithin(location.href) ?? null;
+  const initialUnit = deriveUnit(postedWithin);
 
-  const [unit, setUnit] = useState<Unit>(() => deriveUnit(postedWithin));
-  const [inputValue, setInputValue] = useState<string>(() => {
-    const initialUnit = deriveUnit(postedWithin);
-    return deriveInputValue(postedWithin, initialUnit);
-  });
+  const [unit, setUnit] = useState<Unit>(initialUnit);
+  const [inputValue, setInputValue] = useState(() =>
+    deriveInputValue(postedWithin, initialUnit),
+  );
 
-  useEffect(() => {
-    const nextUnit = deriveUnit(postedWithin);
-
-    // Sync local draft with external Zustand state (postedWithin is the source of truth)
-    // eslint-disable-next-line @eslint-react/set-state-in-effect
+  function applyPostedWithin(value: number | null) {
+    const nextUnit = deriveUnit(value);
     setUnit(nextUnit);
-    // eslint-disable-next-line @eslint-react/set-state-in-effect
-    setInputValue(deriveInputValue(postedWithin, nextUnit));
-  }, [postedWithin]);
+    setInputValue(deriveInputValue(value, nextUnit));
+
+    const nextUrl = buildPostedWithinUrl(location.href, value);
+    if (nextUrl) location.replace(nextUrl);
+  }
 
   function handleApply() {
     const minutes = Math.round(Number(inputValue) * UNIT_TO_MINUTES[unit]);
     if (!Number.isSafeInteger(minutes) || minutes < 1) return;
 
-    setPostedWithin(minutes);
+    applyPostedWithin(minutes);
   }
 
   function handleClear() {
-    setPostedWithin(null);
+    applyPostedWithin(null);
   }
 
   function handleUnitChange(value: Unit | null) {
@@ -94,7 +92,7 @@ export function PostedWithin() {
   }
 
   function handlePresetClick(value: number, presetUnit: Unit) {
-    setPostedWithin(value * UNIT_TO_MINUTES[presetUnit]);
+    applyPostedWithin(value * UNIT_TO_MINUTES[presetUnit]);
   }
 
   return (

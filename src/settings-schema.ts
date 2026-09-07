@@ -1,14 +1,13 @@
 import type { FilterId } from './constants';
 import { z } from 'zod';
 
-export const SETTINGS_SCHEMA_VERSION = 0;
+export const SETTINGS_SCHEMA_VERSION = 1;
 
 export interface Settings {
   enabledFilters: Record<FilterId, boolean>;
   blockedCompanies: string[];
   excludedKeywords: string[];
   descriptionKeywords: string[];
-  postedWithin: number | null;
   defaultToRecentSort: boolean;
 }
 
@@ -43,7 +42,6 @@ const settingsSchema: z.ZodType<Settings> = z.object({
   blockedCompanies: z.array(tagSchema),
   excludedKeywords: z.array(tagSchema),
   descriptionKeywords: z.array(tagSchema),
-  postedWithin: z.int().positive().nullable(),
   defaultToRecentSort: z.boolean(),
 });
 
@@ -70,7 +68,7 @@ export function migrateSettingsState(
   state: unknown,
   version: number,
 ): PersistedSettingsState {
-  if (version !== SETTINGS_SCHEMA_VERSION) {
+  if (version > SETTINGS_SCHEMA_VERSION) {
     throw new UnsupportedSettingsVersionError(version);
   }
 

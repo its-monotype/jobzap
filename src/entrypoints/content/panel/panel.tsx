@@ -6,14 +6,27 @@ import { BlockedCompanies } from './blocked-companies';
 import { DescriptionHighlights } from './description-highlights';
 import { ExcludedKeywords } from './excluded-keywords';
 import { FilterStatus } from './filter-status';
-import { isClassicSearchPage } from '../search-url';
+import {
+  buildRecentSortUrl,
+  isClassicSearchPage,
+  supportsPostedWithin,
+} from '../search-url';
 import { PostedWithin } from './posted-within';
 import { PanelActionsMenu } from './panel-actions-menu';
 
 export function Panel() {
   const settings = useSettings();
   const actions = useActions();
+  const postedWithinSupported = supportsPostedWithin(location.href);
   const recentSortSupported = isClassicSearchPage(location.href);
+
+  function handleDefaultSortChange(checked: boolean) {
+    actions.setDefaultToRecentSort(checked);
+    if (!checked) return;
+
+    const nextUrl = buildRecentSortUrl(location.href);
+    if (nextUrl) location.replace(nextUrl);
+  }
 
   return (
     <div className="flex max-h-[calc(100vh-140px)] w-80 flex-col overflow-hidden rounded-lg border bg-background shadow-lg">
@@ -29,15 +42,13 @@ export function Panel() {
       </div>
 
       <div className="space-y-4 overflow-y-auto p-4">
-        <PostedWithin />
+        {postedWithinSupported && <PostedWithin />}
 
         {recentSortSupported && (
           <SettingRow label="Default to most recent">
             <Switch
               checked={settings.defaultToRecentSort}
-              onCheckedChange={(checked) =>
-                actions.setDefaultToRecentSort(checked)
-              }
+              onCheckedChange={handleDefaultSortChange}
             />
           </SettingRow>
         )}

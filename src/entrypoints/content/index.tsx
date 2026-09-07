@@ -15,45 +15,18 @@ import { createCompanyBlockButton } from './company-block-button';
 import { updateDescriptionHighlights } from './description-highlights';
 import { resolveJobDetails } from './job-details';
 import { applyFilters, resolveJobList } from './job-list-filter';
-import {
-  buildPostedWithinUrl,
-  buildRecentSortUrl,
-  isJobSearchPage,
-  parsePostedWithin,
-} from './search-url';
+import { buildRecentSortUrl, isJobSearchPage } from './search-url';
 
 const LINKEDIN_MATCH_PATTERN = 'https://www.linkedin.com/*';
 const linkedinPattern = new MatchPattern(LINKEDIN_MATCH_PATTERN);
 
-/**
- * Applies URL-based settings by replacing the current URL.
- * Returns true if navigation was initiated.
- */
-function applyUrlModifiers(url: string): boolean {
-  const { postedWithin, defaultToRecentSort } =
-    useSettingsStore.getState().settings;
+function applyDefaultSort(url: string): boolean {
+  if (!useSettingsStore.getState().settings.defaultToRecentSort) return false;
 
-  let nextUrl = buildPostedWithinUrl(url, postedWithin) ?? url;
-  if (defaultToRecentSort) {
-    nextUrl = buildRecentSortUrl(nextUrl) ?? nextUrl;
-  }
-
-  if (nextUrl === url) return false;
-
+  const nextUrl = buildRecentSortUrl(url);
+  if (!nextUrl) return false;
   location.replace(nextUrl);
   return true;
-}
-
-function syncPostedWithin(oldUrl: string, newUrl: string) {
-  const oldValue = parsePostedWithin(oldUrl);
-  const newValue = parsePostedWithin(newUrl);
-  if (oldValue === undefined || newValue === undefined) return;
-  if (oldValue === newValue) return;
-
-  const { actions, settings } = useSettingsStore.getState();
-  if (settings.postedWithin !== newValue) {
-    actions.setPostedWithin(newValue);
-  }
 }
 
 export default defineContentScript({
@@ -162,14 +135,6 @@ export default defineContentScript({
       if (!isJobSearchPage(currentUrl)) return;
 
       if (
-        state.settings.postedWithin !== prevState.settings.postedWithin ||
-        state.settings.defaultToRecentSort !==
-          prevState.settings.defaultToRecentSort
-      ) {
-        if (applyUrlModifiers(currentUrl)) return; // page will reload
-      }
-
-      if (
         !shallow(
           state.settings.descriptionKeywords,
           prevState.settings.descriptionKeywords,
@@ -193,7 +158,7 @@ export default defineContentScript({
       }
     });
 
-    ctx.addEventListener(window, 'wxt:locationchange', ({ newUrl, oldUrl }) => {
+    ctx.addEventListener(window, 'wxt:locationchange', ({ newUrl }) => {
       if (!linkedinPattern.includes(newUrl)) return;
 
       currentUrl = newUrl.href;
@@ -204,8 +169,7 @@ export default defineContentScript({
         return;
       }
 
-      syncPostedWithin(oldUrl.href, currentUrl);
-      if (applyUrlModifiers(currentUrl)) return; // page will reload
+      if (applyDefaultSort(currentUrl)) return; // page will reload
       if (!panelUi.mounted) panelUi.mount();
       observePage();
     });
@@ -217,7 +181,7 @@ export default defineContentScript({
     });
 
     if (isJobSearchPage(currentUrl)) {
-      if (applyUrlModifiers(currentUrl)) return; // page will reload
+      if (applyDefaultSort(currentUrl)) return; // page will reload
       panelUi.mount();
       observePage();
     }

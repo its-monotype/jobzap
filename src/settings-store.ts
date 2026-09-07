@@ -39,7 +39,6 @@ interface SettingsStore extends PersistedSettingsState {
     setExcludedKeywords: (keywords: string[]) => void;
     setDescriptionKeywords: (keywords: string[]) => void;
 
-    setPostedWithin: (value: number | null) => void;
     setDefaultToRecentSort: (value: boolean) => void;
   };
 }
@@ -68,7 +67,6 @@ const defaultSettings: Settings = {
   blockedCompanies: [],
   excludedKeywords: [],
   descriptionKeywords: [],
-  postedWithin: null,
   defaultToRecentSort: false,
 };
 
@@ -156,8 +154,6 @@ export const useSettingsStore = create<SettingsStore>()(
         setDescriptionKeywords: (descriptionKeywords) =>
           set((s) => ({ settings: { ...s.settings, descriptionKeywords } })),
 
-        setPostedWithin: (postedWithin) =>
-          set((s) => ({ settings: { ...s.settings, postedWithin } })),
         setDefaultToRecentSort: (defaultToRecentSort) =>
           set((s) => ({ settings: { ...s.settings, defaultToRecentSort } })),
       },

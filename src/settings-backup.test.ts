@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import {
   createSettingsBackup,
   InvalidSettingsBackupError,
@@ -7,7 +8,6 @@ import {
   type PersistedSettingsState,
   SETTINGS_SCHEMA_VERSION,
 } from './settings-schema';
-import { describe, expect, it } from 'vitest';
 
 const state: PersistedSettingsState = {
   settings: {
@@ -22,7 +22,6 @@ const state: PersistedSettingsState = {
     blockedCompanies: ['Acme', 'Example GmbH'],
     excludedKeywords: ['Intern', 'Junior'],
     descriptionKeywords: ['TypeScript', 'remote-first'],
-    postedWithin: 180,
     defaultToRecentSort: true,
   },
   activeFilters: {
@@ -36,7 +35,7 @@ const state: PersistedSettingsState = {
 };
 
 describe('settings backups', () => {
-  it('round-trips the complete persisted state and its schema version', () => {
+  it('preserves settings through export and import', () => {
     const backup = createSettingsBackup(state);
 
     expect(backup).toEqual({
@@ -46,36 +45,29 @@ describe('settings backups', () => {
     expect(parseSettingsBackup(JSON.stringify(backup))).toEqual(state);
   });
 
-  it('strips stale fields left by older settings schemas', () => {
-    const staleState = {
-      ...state,
-      settings: {
-        ...state.settings,
-        removedSetting: ['legacy value'],
+  it('imports a legacy settings backup', () => {
+    const legacyBackup = {
+      state: {
+        ...state,
+        settings: {
+          ...state.settings,
+          postedWithin: 180,
+        },
       },
+      version: 0,
     };
 
-    const backup = createSettingsBackup(staleState);
-
-    expect(backup.state).toEqual(state);
-    expect(
-      parseSettingsBackup(
-        JSON.stringify({
-          state: staleState,
-          version: SETTINGS_SCHEMA_VERSION,
-        }),
-      ),
-    ).toEqual(state);
+    expect(parseSettingsBackup(JSON.stringify(legacyBackup))).toEqual(state);
   });
 
-  it('rejects invalid JSON and unrelated JSON files', () => {
+  it('rejects invalid backup files', () => {
     expect(() => parseSettingsBackup('{')).toThrow(InvalidSettingsBackupError);
     expect(() => parseSettingsBackup('{"blockedCompanies":[]}')).toThrow(
       InvalidSettingsBackupError,
     );
   });
 
-  it('rejects malformed values before they reach the settings store', () => {
+  it('rejects malformed setting values', () => {
     const backup = {
       ...createSettingsBackup(state),
       state: {
@@ -119,7 +111,7 @@ describe('settings backups', () => {
     );
   });
 
-  it('rejects backups with an unsupported newer schema version', () => {
+  it('rejects backups from future schema versions', () => {
     const backup = {
       ...createSettingsBackup(state),
       version: SETTINGS_SCHEMA_VERSION + 1,

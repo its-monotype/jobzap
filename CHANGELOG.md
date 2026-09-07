@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.3](https://github.com/its-monotype/jobzap/compare/jobzap-v1.3.2...jobzap-v1.3.3) (2026-09-07)
+
+
+### Bug Fixes
+
+* **linkedin:** make posted within tab-specific ([3b96f2c](https://github.com/its-monotype/jobzap/commit/3b96f2c997ff95989f46e4b1fa23ce16de55b45b))
+
 ## [1.3.2](https://github.com/its-monotype/jobzap/compare/jobzap-v1.3.1...jobzap-v1.3.2) (2026-08-31)
 
 

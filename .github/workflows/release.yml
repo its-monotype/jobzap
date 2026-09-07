@@ -68,7 +68,7 @@ jobs:
       - name: Submit
         run: pnpm exec wxt submit --chrome-zip .output/*-chrome.zip
         env:
-          DRY_RUN: ${{ inputs.dry_run }}
+          DRY_RUN: ${{ inputs.dry_run == true && 'true' || 'false' }}
           CHROME_API_VERSION: v2
           CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
           CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}

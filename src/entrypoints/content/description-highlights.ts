@@ -6,20 +6,20 @@ const TEXT_BLOCK_SELECTOR =
   'p, li, dt, dd, blockquote, pre, h1, h2, h3, h4, h5, h6, div, section, article';
 
 function createKeywordPattern(keywords: string[]): RegExp | null {
-  const patterns = Array.from(
-    new Set(
-      keywords
-        .map(normalizeText)
-        .filter(Boolean)
-        .map((keyword) => keyword.toLowerCase())
-        .map((keyword) =>
-          keyword
-            .split(' ')
-            .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-            .join('\\s+'),
-        ),
-    ),
-  ).sort((a, b) => b.length - a.length);
+  const uniquePatterns = new Set<string>();
+  for (const value of keywords) {
+    const keyword = normalizeText(value).toLowerCase();
+    if (!keyword) continue;
+
+    const pattern = keyword
+      .split(' ')
+      .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('\\s+');
+    uniquePatterns.add(pattern);
+  }
+  const patterns = Array.from(uniquePatterns).sort(
+    (a, b) => b.length - a.length,
+  );
 
   return patterns.length > 0 ? new RegExp(patterns.join('|'), 'giu') : null;
 }

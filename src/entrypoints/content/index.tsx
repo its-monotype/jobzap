@@ -11,6 +11,7 @@ import { useSettingsStore } from '@/settings-store';
 import ReactDOM from 'react-dom/client';
 import { shallow } from 'zustand/vanilla/shallow';
 import { App } from './app';
+import { usePageStore } from './page-store';
 import { createCompanyBlockButton } from './company-block-button';
 import { updateDescriptionHighlights } from './description-highlights';
 import { resolveJobDetails } from './job-details';
@@ -71,6 +72,9 @@ export default defineContentScript({
       },
     });
 
+    let currentUrl = location.href;
+    usePageStore.setState({ url: currentUrl });
+
     const companyBlockButton = createCompanyBlockButton(ctx);
     companyBlockButton.autoMount();
 
@@ -129,8 +133,6 @@ export default defineContentScript({
       updateDescriptionHighlights(null);
     };
 
-    let currentUrl = location.href;
-
     const unsubscribeStore = useSettingsStore.subscribe((state, prevState) => {
       if (!isJobSearchPage(currentUrl)) return;
 
@@ -162,6 +164,7 @@ export default defineContentScript({
       if (!linkedinPattern.includes(newUrl)) return;
 
       currentUrl = newUrl.href;
+      usePageStore.setState({ url: currentUrl });
 
       if (!isJobSearchPage(currentUrl)) {
         stopObservingPage();

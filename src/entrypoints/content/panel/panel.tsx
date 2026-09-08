@@ -6,25 +6,35 @@ import { BlockedCompanies } from './blocked-companies';
 import { DescriptionHighlights } from './description-highlights';
 import { ExcludedKeywords } from './excluded-keywords';
 import { FilterStatus } from './filter-status';
+import { usePageStore } from '../page-store';
 import {
   buildRecentSortUrl,
+  buildPostedWithinUrl,
   isClassicSearchPage,
+  parsePostedWithin,
   supportsPostedWithin,
 } from '../search-url';
 import { PostedWithin } from './posted-within';
 import { PanelActionsMenu } from './panel-actions-menu';
 
 export function Panel() {
+  const url = usePageStore((state) => state.url);
   const settings = useSettings();
   const actions = useActions();
-  const postedWithinSupported = supportsPostedWithin(location.href);
-  const recentSortSupported = isClassicSearchPage(location.href);
+  const postedWithinSupported = supportsPostedWithin(url);
+  const recentSortSupported = isClassicSearchPage(url);
+  const postedWithin = parsePostedWithin(url) ?? null;
 
   function handleDefaultSortChange(checked: boolean) {
     actions.setDefaultToRecentSort(checked);
     if (!checked) return;
 
     const nextUrl = buildRecentSortUrl(location.href);
+    if (nextUrl) location.replace(nextUrl);
+  }
+
+  function handlePostedWithinApply(value: number | null) {
+    const nextUrl = buildPostedWithinUrl(location.href, value);
     if (nextUrl) location.replace(nextUrl);
   }
 
@@ -42,7 +52,13 @@ export function Panel() {
       </div>
 
       <div className="space-y-4 overflow-y-auto p-4">
-        {postedWithinSupported && <PostedWithin />}
+        {postedWithinSupported && (
+          <PostedWithin
+            key={postedWithin}
+            postedWithin={postedWithin}
+            onApply={handlePostedWithinApply}
+          />
+        )}
 
         {recentSortSupported && (
           <SettingRow label="Default to most recent">

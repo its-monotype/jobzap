@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { buildPostedWithinUrl, parsePostedWithin } from '../search-url';
 
 type Unit = 'minutes' | 'hours' | 'days';
 
@@ -57,8 +56,13 @@ function deriveInputValue(minutes: number | null, unit: Unit): string {
   return String(minutes / UNIT_TO_MINUTES[unit]);
 }
 
-export function PostedWithin() {
-  const postedWithin = parsePostedWithin(location.href) ?? null;
+export function PostedWithin({
+  postedWithin,
+  onApply,
+}: {
+  postedWithin: number | null;
+  onApply: (value: number | null) => void;
+}) {
   const initialUnit = deriveUnit(postedWithin);
 
   const [unit, setUnit] = useState<Unit>(initialUnit);
@@ -71,8 +75,7 @@ export function PostedWithin() {
     setUnit(nextUnit);
     setInputValue(deriveInputValue(value, nextUnit));
 
-    const nextUrl = buildPostedWithinUrl(location.href, value);
-    if (nextUrl) location.replace(nextUrl);
+    onApply(value);
   }
 
   function handleApply() {

@@ -121,4 +121,33 @@ describe('settings backups', () => {
       InvalidSettingsBackupError,
     );
   });
+
+  it.for([
+    'blockedCompanies',
+    'excludedKeywords',
+    'descriptionKeywords',
+  ] as const)(
+    'normalizes and deduplicates imported %s, preserving first spelling and order',
+    (field) => {
+      const backup = {
+        version: SETTINGS_SCHEMA_VERSION,
+        state: {
+          ...state,
+          settings: {
+            ...state.settings,
+            [field]: [
+              '  Acme   Corp ',
+              'acme corp',
+              'Beta',
+              'Beta',
+              'ACME CORP',
+            ],
+          },
+        },
+      };
+      expect(
+        parseSettingsBackup(JSON.stringify(backup)).settings[field],
+      ).toEqual(['Acme Corp', 'Beta']);
+    },
+  );
 });

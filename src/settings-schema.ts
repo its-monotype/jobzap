@@ -1,3 +1,4 @@
+import { normalizeText } from './lib/utils';
 import type { FilterId } from './constants';
 import { z } from 'zod';
 
@@ -35,13 +36,28 @@ const filterStateSchema: z.ZodType<Record<FilterId, boolean>> = z.object({
   keywords: z.boolean(),
 });
 
+function deduplicateTags(tags: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const tag of tags) {
+    const cleaned = normalizeText(tag);
+    const key = cleaned.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(cleaned);
+  }
+  return result;
+}
+
 const tagSchema = z.string().refine((value) => value.trim().length > 0);
+
+const tagsSchema = z.array(tagSchema).transform(deduplicateTags);
 
 const settingsSchema: z.ZodType<Settings> = z.object({
   enabledFilters: filterStateSchema,
-  blockedCompanies: z.array(tagSchema),
-  excludedKeywords: z.array(tagSchema),
-  descriptionKeywords: z.array(tagSchema),
+  blockedCompanies: tagsSchema,
+  excludedKeywords: tagsSchema,
+  descriptionKeywords: tagsSchema,
   defaultToRecentSort: z.boolean(),
 });
 

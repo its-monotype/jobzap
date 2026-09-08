@@ -9,6 +9,7 @@ import { SearchIcon, XIcon } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 
 const CHIP_LIMIT = 3;
+const EMPTY_SUGGESTIONS: string[] = [];
 
 export interface TagsInputProps {
   value: string[];
@@ -39,7 +40,7 @@ export function TagsInput({
   value,
   onChange,
   onClear,
-  suggestions = [],
+  suggestions = EMPTY_SUGGESTIONS,
   placeholder,
   disabled = false,
   className,

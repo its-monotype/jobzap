@@ -11,15 +11,15 @@ export function ExcludedKeywords() {
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="text-sm">Title keywords</div>
+      <label className="flex items-center justify-between">
+        <span className="text-sm">Title keywords</span>
         <Switch
           checked={enabled}
           onCheckedChange={(checked) =>
             actions.setFilterEnabled('keywords', checked)
           }
         />
-      </div>
+      </label>
       <TagsInput
         value={keywords}
         onChange={actions.setExcludedKeywords}

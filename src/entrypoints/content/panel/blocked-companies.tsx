@@ -13,15 +13,15 @@ export function BlockedCompanies() {
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="text-sm">Companies</div>
+      <label className="flex items-center justify-between">
+        <span className="text-sm">Companies</span>
         <Switch
           checked={enabled}
           onCheckedChange={(checked) =>
             actions.setFilterEnabled('companies', checked)
           }
         />
-      </div>
+      </label>
       <TagsInput
         value={blockedCompanies}
         onChange={actions.setBlockedCompanies}

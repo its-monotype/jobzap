@@ -126,9 +126,9 @@ interface SettingRowProps {
 
 function SettingRow({ label, children }: SettingRowProps) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <div className="text-sm">{label}</div>
+    <label className="flex items-center justify-between gap-3">
+      <span className="text-sm">{label}</span>
       {children}
-    </div>
+    </label>
   );
 }

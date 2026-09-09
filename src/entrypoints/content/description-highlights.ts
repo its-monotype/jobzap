@@ -34,53 +34,11 @@ function findKeywordRanges(root: HTMLElement, keywords: string[]): Range[] {
   const pattern = createKeywordPattern(keywords);
   if (!pattern) return [];
 
-  const textGroups = new Map<Element, Text[]>();
-  const walker = root.ownerDocument.createTreeWalker(
-    root,
-    NodeFilter.SHOW_TEXT,
-    {
-      acceptNode: (node) => {
-        const parent = node.parentElement;
-        if (!node.textContent || !parent) return NodeFilter.FILTER_REJECT;
-        if (
-          parent.closest(
-            'button, [role="button"], script, style, textarea, [aria-hidden="true"]',
-          )
-        ) {
-          return NodeFilter.FILTER_REJECT;
-        }
-        return NodeFilter.FILTER_ACCEPT;
-      },
-    },
-  );
-
-  let node: Node | null;
-  while ((node = walker.nextNode())) {
-    const textNode = node as Text;
-    const parent = textNode.parentElement;
-    if (!parent) continue;
-
-    const block = parent.closest(TEXT_BLOCK_SELECTOR) ?? root;
-    const group = textGroups.get(block);
-    if (group) {
-      group.push(textNode);
-    } else {
-      textGroups.set(block, [textNode]);
-    }
-  }
-
   const ranges: Range[] = [];
+  let segments: TextSegment[] = [];
+  let text = '';
 
-  for (const textNodes of textGroups.values()) {
-    const segments: TextSegment[] = [];
-    let text = '';
-
-    for (const textNode of textNodes) {
-      const start = text.length;
-      text += textNode.data;
-      segments.push({ node: textNode, start, end: text.length });
-    }
-
+  const flush = () => {
     pattern.lastIndex = 0;
 
     for (const match of text.matchAll(pattern)) {
@@ -101,8 +59,40 @@ function findKeywordRanges(root: HTMLElement, keywords: string[]): Range[] {
       range.setEnd(endSegment.node, matchEnd - endSegment.start);
       ranges.push(range);
     }
-  }
+    segments = [];
+    text = '';
+  };
 
+  const visit = (node: Node): void => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const textNode = node as Text;
+      const start = text.length;
+      text += textNode.data;
+      segments.push({ node: textNode, start, end: text.length });
+      return;
+    }
+    if (!(node instanceof Element)) return;
+    if (
+      node.matches(
+        'button, [role="button"], script, style, textarea, [aria-hidden="true"]',
+      )
+    ) {
+      flush();
+      return;
+    }
+    if (node.tagName === 'BR') {
+      text += '\n';
+      return;
+    }
+
+    const isBlock = node.matches(TEXT_BLOCK_SELECTOR);
+    if (isBlock) flush();
+    for (const child of node.childNodes) visit(child);
+    if (isBlock) flush();
+  };
+
+  visit(root);
+  flush();
   return ranges;
 }
 

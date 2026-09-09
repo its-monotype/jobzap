@@ -7,12 +7,9 @@ const CLASSIC_COMPANY_SELECTOR =
 const SEMANTIC_DETAILS_SELECTOR =
   '[data-sdui-screen="com.linkedin.sdui.flagshipnav.jobs.SemanticJobDetails"]';
 const SEMANTIC_COMPANY_SELECTOR = '[aria-label^="Company,"]';
-const SEMANTIC_COMPANY_ANCHOR_SELECTOR = `${SEMANTIC_DETAILS_SELECTOR} a[href*="/company/"]:has(${SEMANTIC_COMPANY_SELECTOR})`;
 const CLASSIC_DESCRIPTION_SELECTOR =
   '#job-details, .jobs-description-content__text';
 const SEMANTIC_DESCRIPTION_SELECTOR = '[id^="JobDetails_AboutTheJob_"]';
-
-export const COMPANY_ANCHOR_SELECTOR = `${CLASSIC_COMPANY_SELECTOR}, ${SEMANTIC_COMPANY_ANCHOR_SELECTOR}`;
 
 interface JobDetailsContext {
   layout: 'classic' | 'semantic';
@@ -20,7 +17,7 @@ interface JobDetailsContext {
   description: HTMLElement | null;
 }
 
-interface CompanyTarget {
+export interface CompanyTarget {
   companyName: string;
   anchor: HTMLElement;
 }
@@ -53,8 +50,9 @@ export function resolveJobDetails(): JobDetailsContext | null {
     : null;
 }
 
-export function resolveCompanyTarget(): CompanyTarget | null {
-  const context = resolveJobDetails();
+export function resolveCompanyTarget(
+  context: JobDetailsContext | null,
+): CompanyTarget | null {
   if (!context) return null;
 
   if (context.layout === 'classic') {

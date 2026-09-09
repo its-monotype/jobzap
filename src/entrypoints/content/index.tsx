@@ -14,7 +14,7 @@ import { App } from './app';
 import { usePageStore } from './page-store';
 import { createCompanyBlockButton } from './company-block-button';
 import { updateDescriptionHighlights } from './description-highlights';
-import { resolveJobDetails } from './job-details';
+import { resolveCompanyTarget, resolveJobDetails } from './job-details';
 import { applyFilters, resolveJobList } from './job-list-filter';
 import { buildRecentSortUrl, isJobSearchPage } from './search-url';
 
@@ -76,9 +76,9 @@ export default defineContentScript({
     usePageStore.setState({ url: currentUrl });
 
     const companyBlockButton = createCompanyBlockButton(ctx);
-    companyBlockButton.autoMount();
 
     let jobListRoot: HTMLElement | null = null;
+    let jobDetailsRoot: HTMLElement | null = null;
     let jobDescription: HTMLElement | null = null;
 
     const syncJobList = () => {
@@ -87,49 +87,60 @@ export default defineContentScript({
       applyFilters(jobList);
     };
 
-    const syncDescriptionHighlights = () => {
-      jobDescription = resolveJobDetails()?.description ?? null;
-      updateDescriptionHighlights(jobDescription);
+    const syncJobDetails = (mutations?: MutationRecord[]) => {
+      const details = resolveJobDetails();
+      const description = details?.description ?? null;
+      const descriptionChanged =
+        description !== jobDescription ||
+        mutations === undefined ||
+        mutations.some((mutation) => description?.contains(mutation.target));
+      jobDetailsRoot = details?.root ?? null;
+      jobDescription = description;
+      companyBlockButton.sync(resolveCompanyTarget(details));
+      if (descriptionChanged) updateDescriptionHighlights(description);
     };
 
     const pageObserver = new MutationObserver((mutations) => {
       const currentJobListRoot = jobListRoot;
-      const shouldSyncJobList =
+      if (
         !currentJobListRoot?.isConnected ||
         mutations.some((mutation) =>
           currentJobListRoot.contains(mutation.target),
-        );
-
-      const currentJobDescription = jobDescription;
-      const shouldSyncDescription =
-        !currentJobDescription?.isConnected ||
-        mutations.some((mutation) =>
-          currentJobDescription.contains(mutation.target),
-        );
-
-      if (shouldSyncJobList) {
+        )
+      ) {
         syncJobList();
       }
 
-      if (shouldSyncDescription) {
-        syncDescriptionHighlights();
+      const currentJobDetailsRoot = jobDetailsRoot;
+      if (
+        !currentJobDetailsRoot?.isConnected ||
+        mutations.some((mutation) =>
+          currentJobDetailsRoot.contains(mutation.target),
+        )
+      ) {
+        syncJobDetails(mutations);
       }
     });
 
+    let observingPage = false;
     const observePage = () => {
-      pageObserver.disconnect();
+      if (observingPage) return;
+      observingPage = true;
       pageObserver.observe(document.body, {
         childList: true,
         subtree: true,
       });
       syncJobList();
-      syncDescriptionHighlights();
+      syncJobDetails();
     };
 
     const stopObservingPage = () => {
+      observingPage = false;
       pageObserver.disconnect();
       jobListRoot = null;
+      jobDetailsRoot = null;
       jobDescription = null;
+      companyBlockButton.remove();
       updateDescriptionHighlights(null);
     };
 
@@ -142,7 +153,7 @@ export default defineContentScript({
           prevState.settings.descriptionKeywords,
         )
       ) {
-        syncDescriptionHighlights();
+        updateDescriptionHighlights(jobDescription);
       }
 
       if (

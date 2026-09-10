@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.3.4](https://github.com/its-monotype/jobzap/compare/jobzap-v1.3.3...jobzap-v1.3.4) (2026-09-10)
+
+
+### Bug Fixes
+
+* **a11y:** associate panel switches with their labels ([f867d83](https://github.com/its-monotype/jobzap/commit/f867d8345ece63405e6ec5ad9717a88be29ff16c))
+* **backups:** normalize and deduplicate tags in schema ([007316f](https://github.com/its-monotype/jobzap/commit/007316ff1492716f4f234eae1c4fd0f4be26310e))
+* **highlights:** respect line breaks and block boundaries ([5aefb37](https://github.com/its-monotype/jobzap/commit/5aefb3799edcc7b11150382fadc9df3310ae8f8c))
+* provide boolean dry run value for release publishing ([6cf040b](https://github.com/its-monotype/jobzap/commit/6cf040bb3abb0a636798eddcb3a59aa67fee677d))
+* sync panel with tab-local URL changes ([4b2a1c8](https://github.com/its-monotype/jobzap/commit/4b2a1c8fe7d63849c8fad279e6afec2f82695ca6))
+* synchronize company button with reused job details ([cc470f5](https://github.com/its-monotype/jobzap/commit/cc470f540f16a6f76a58ed6e268aad2ca5b98f11))
+
+
+### Performance Improvements
+
+* **tags-input:** stabilize the empty suggestions default ([0d760b6](https://github.com/its-monotype/jobzap/commit/0d760b645aaa2de2b7fbec11bcf9587683c17eb7))
+
 ## [1.3.3](https://github.com/its-monotype/jobzap/compare/jobzap-v1.3.2...jobzap-v1.3.3) (2026-09-07)
 
 

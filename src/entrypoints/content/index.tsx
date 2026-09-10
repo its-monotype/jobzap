@@ -11,11 +11,11 @@ import { useSettingsStore } from '@/settings-store';
 import ReactDOM from 'react-dom/client';
 import { shallow } from 'zustand/vanilla/shallow';
 import { App } from './app';
-import { usePageStore } from './page-store';
 import { createCompanyBlockButton } from './company-block-button';
 import { updateDescriptionHighlights } from './description-highlights';
 import { resolveCompanyTarget, resolveJobDetails } from './job-details';
 import { applyFilters, resolveJobList } from './job-list-filter';
+import { usePageStore } from './page-store';
 import { buildRecentSortUrl, isJobSearchPage } from './search-url';
 
 const LINKEDIN_MATCH_PATTERN = 'https://www.linkedin.com/*';

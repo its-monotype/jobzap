@@ -38,7 +38,7 @@ Hide jobs matching any combination of:
 
 ### Control search results
 
-- Filter by any date range (e.g. last 3 days)
+- Filter by any time range (e.g. last 3 days)
 - Default to most recent sort (classic search only)
 
 ### Review jobs faster

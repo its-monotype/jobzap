@@ -7,6 +7,10 @@ updates:
       interval: 'weekly'
 
     groups:
+      security:
+        applies-to: security-updates
+        patterns:
+          - '*'
       non-major:
         patterns:
           - '*'
